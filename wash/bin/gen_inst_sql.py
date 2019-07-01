@@ -43,6 +43,8 @@ def get_rowid_tbl_insql(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt,records,p
         exit(1)
     return ins_sql
 
+
+
 # 组装rowid去重SQL
 def get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
     try:
@@ -187,6 +189,50 @@ def get_pk_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
         logger.info(ins_sql)
     except Exception as err:
         logger.error("组装组装主键去重插入SQL语句失败%s" %err)
+        raise err
+        exit(1)
+    return ins_sql
+
+
+# 组装rowid去重SQL-清洗规则为空的情况
+def get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt):
+    try:
+        datadt = chg_date_format(data_dt)
+        jobinfo = str(jobid)+ "_" + str(tbid) + "_"+ str(ifpro)+"_"+str(datadt)+"_deal_dump1"
+        logger.info(jobinfo)
+        columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
+        hive_sql_str_columns = list_to_str2(columns)
+        dbtbmaps = get_dbtbmaps_by_tbid(logger,conn, tbid)
+        rowid_dbtb_name = dbtbmaps.get("05") + "_rowid"
+        isu_dbtb_name = dbtbmaps.get("04")
+        # tmp_dbtb_name_deal_dump = dbtbmaps.get("05") + "_deal_dump"
+        tmp_dbtb_name_deal_dump = dbtbmaps.get("03")
+        ins_sql_file = InsProDir + jobinfo + ".sql"
+        where_par_str = " where data_dt='" + data_dt + "') as tt\n"
+        ins_par_str1 = " partition(data_dt='" + data_dt + "')\n"
+        ins_par_str2 = " partition(data_dt='" + data_dt + "',isu_type='1')\n"
+        if(ifpro == '0'):
+            rowid_dbtb_name = rowid_dbtb_name +"_"+jobid
+            isu_dbtb_name = isu_dbtb_name +"_"+jobid
+            tmp_dbtb_name_deal_dump = tmp_dbtb_name_deal_dump+"_"+jobid
+            ins_sql_file = InsDevDir + jobinfo + ".sql"
+            where_par_str=") as tt\n"
+            ins_par_str1 = "\n"
+            ins_par_str2 = " partition(isu_type='1')\n"
+        ins_sql = "from(\n\tselect\n\t\trowidlwq,\n" + hive_sql_str_columns + \
+                  "\t\trow_number() over(partition by rowidlwq ) as rank_num\n" + \
+                  "\tfrom " + rowid_dbtb_name + " t " + where_par_str + \
+                  "insert overwrite table " + tmp_dbtb_name_deal_dump + ins_par_str1 + \
+                  "\tselect\n\t\trowidlwq,\n" + list_to_str2(columns) + "\t\t''\n\t where rank_num=1\n" + \
+                  "insert overwrite table " + isu_dbtb_name + ins_par_str2 + \
+                  "\tselect\n\t\trowidlwq,\n" + list_to_str2(columns)+\
+                  "\t\t'rowid'"+\
+                  "\n\t where rank_num>1;\n\n\n\n\n\n"
+        ins_sql = ins_sql.replace("\t", "    ")
+        write_sql_to_file(ins_sql_file, ins_sql)
+        logger.info(ins_sql)
+    except Exception as err:
+        logger.error("组装按rowid所有字段去重插入SQL语句失败%s" %err)
         raise err
         exit(1)
     return ins_sql

@@ -113,11 +113,16 @@ def gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt):
 #生成创建各个步骤处理SQL
 def gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect):
     try:
+        mates = get_casewhen_mate(logger,conn, tbid,ifpro)
+        mates_len = len(mates)
         with open(hqlfile,"a") as f:
             f.write(get_rowid_tbl_insql(logger,hive_conn,conn, jobid,tbid,ifpro,data_dt,records,pect))
-            f.write(get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
-            f.write(get_columns_deal_sql_once(logger,config, conn,jobid,tbid,ifpro, data_dt))
-            f.write(get_pk_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+            if mates_len== 0:
+                f.write(get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+            else:
+                f.write(get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                f.write(get_columns_deal_sql_once(logger,config, conn,jobid,tbid,ifpro, data_dt))
+                f.write(get_pk_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
     except Exception as err:
         logger.error("生成创建各个步骤处理SQL失败 %s"  %err)
         raise err
@@ -187,8 +192,8 @@ def process(hqlfile,logger,conf,hive_conn,conn,tbid,mode,ifpro,pect,data_dt):
         if(rtcode != 0):
             raise Exception("hive数据处理失败")
         insert_col_static(logger,config,hive_conn,conn,jobid,tbid,ifpro,data_dt)
-        tot,dump,pkdump = get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt)
-        update_job_status(logger,conn,jobid,'DONE',data_dt,data_dt,tot,dump,pkdump)
+        tot,dump,pkdump,allpass = get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt)
+        update_job_status(logger,conn,jobid,'DONE',data_dt,data_dt,ifpro,tot,dump,pkdump,allpass)
     except Exception as err:
         raise err
 
@@ -222,8 +227,9 @@ if __name__ == '__main__':
         if ifpro=='1':
             pect = 100
         process(hqlfile,logger,config,hive_conn,conn,tbid,mode,ifpro,pect,data_dt)
+        # gen_ins_sql(hqlfile,logger,config,hive_conn,conn,tbid,ifpro,data_dt,1000,pect)
     except Exception as err:
-        update_job_status(logger,conn,jobid,'FAILED',data_dt,data_dt,0,0,0)
+        update_job_status(logger,conn,jobid,'FAILED',data_dt,data_dt,ifpro,0,0,0,0)
         warning_message = traceback.format_exc()
         logging.error(warning_message)
         logger.error("Process finished failed ,exit!")
