@@ -13,14 +13,22 @@ CLEANSE_DB_NAME=cleanse_db;
 
 CUR_DATE=`date +%Y-%m-%d`
 
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <job-id> <tenant-id>"
+    exit -1
+fi
+
+JOB_ID=$1
+TENANT_ID=$2
+
 echo "Begin processing ..."
 
 echo "Dumping metadata from metastore source ..."
 mysqldump -h $METASTORE_DB_HOST -u$METASTORE_DB_USER -p$METASTORE_DB_PASS \
 $METASTORE_DB_NAME columns_v2 tbls dbs partitions partition_params sds table_params > metastore.sql
 
-cat metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g" > metastore-sync-1.sql.run
-cat metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g" > metastore-sync-2.sql.run
+cat metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g" > metastore-sync-1.sql.run
+cat metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g" > metastore-sync-2.sql.run
 
 echo "Loading metadata to cleanse database ..."
 date
@@ -45,6 +53,15 @@ mysql -h $CLEANSE_DB_HOST -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS << END
 source metastore-sync-2.sql.run
 END
 
+echo "Updating Metadata-Sync job status ..."
+CUR_TIME=`date "+%Y-%m-%d %H:%M:%S"`
+mysql -h $CLEANSE_DB_HOST -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS << END
+use $CLEANSE_DB_NAME;
+
+update data_proc_job set rfrsh_tm = "$CUR_TIME", job_stus='DONE' where jobid = $JOB_ID;
+
+END
+
 mysql -h $CLEANSE_DB_HOST -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS << END
 use $CLEANSE_DB_NAME;
 
@@ -57,6 +74,7 @@ select count(*) as COLUMN_UPDATED from data_fld where upd_dt = "$CUR_DATE" and c
 select count(*) as COLUMN_DELETED from data_fld where del_dt = "$CUR_DATE";
 
 END
+
 
 echo "Finished."
 date

@@ -46,8 +46,10 @@ case when INSTR(p.part_name, 'data_dt=') = 1
 	end as part_date
 from ${METASTORE_DB}.tbls t1 join
 (select db_id, name
-	from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db
+	from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
 	where name = db_phys_nm
+	and db.partid = p.partid
+	and p.tnmtid = ${TENANT_ID}
 ) t2
 on t1.DB_ID = t2.db_id
 join ${METASTORE_DB}.partitions p
