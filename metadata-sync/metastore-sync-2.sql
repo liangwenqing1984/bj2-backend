@@ -44,7 +44,7 @@ case when INSTR(p.part_name, 'data_dt=') = 1
 				'access_partition_day=', ''),
 			'/', '-')
 	end as part_date
-from ${METASTORE_DB}.tbls t1 join
+from (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t1 join
 (select db_id, name
 	from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
 	where name = db_phys_nm

@@ -14,6 +14,7 @@ source $WORKDIR/set-env.sh
 JOB_ID=$1
 TENANT_ID=$2
 
+METASTORE_TABLE_FILTER="tbl_name not like 'h_bj18_frk%' and tbl_name not like 'h_bj53_web%' and tbl_name not like 'h_bj18_db%' and tbl_name not like 'h_bj30_stat%'"
 
 echo "Begin executing job $JOB_ID for synchronizing metadata for tenant $TENANT_ID ..."
 
@@ -21,8 +22,8 @@ echo "Dumping metadata from metastore source ..."
 mysqldump -h $METASTORE_DB_HOST -P $METASTORE_DB_PORT -u$METASTORE_DB_USER -p$METASTORE_DB_PASS \
 $METASTORE_DB_NAME columns_v2 tbls dbs partitions partition_params sds table_params > $WORKDIR/metastore.sql
 
-cat $WORKDIR/metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g" > $WORKDIR/metastore-sync-1.sql.run
-cat $WORKDIR/metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g" > $WORKDIR/metastore-sync-2.sql.run
+cat $WORKDIR/metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-1.sql.run
+cat $WORKDIR/metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-2.sql.run
 
 echo "Loading metadata to cleanse database ..."
 date
