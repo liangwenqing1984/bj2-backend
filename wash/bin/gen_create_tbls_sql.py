@@ -8,12 +8,17 @@ import logging
 
 
 # 生成建表语句工具
-def gen_crt_util(dbtb,partition_str,crt_columns_str,aftnm):
+def gen_crt_util(dbtb,partition_str,crt_columns_str,aftnm,ifpro):
     rands_column = ""
     if(aftnm == "_rowid"):
         rands_column = "\t\trands string,\n"
-    crt_hqsql = DropStr + dbtb +";\n" +\
-                CreateStr + dbtb + "( \n" +\
+    drop_str = DropStr + dbtb +";\n"
+    create_str = CreateStr + dbtb + "( \n"
+    if(ifpro == '1'):
+        drop_str = "";
+        create_str = CreateIfStr + dbtb + "( \n"
+    crt_hqsql = drop_str +\
+                create_str +\
                 rands_column +\
                 RowidStr +\
                 crt_columns_str + ",\n" +\
@@ -44,7 +49,7 @@ def crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,usecd,aftnm):
             if (usecd == "04"):
                 partition_str = PartitionbyStrIsuDev
                 dbtb_sql_file = CrtDevDir+jobinfo+ "_isu.sql"
-        crt_hqsql=gen_crt_util(dbtb,partition_str,crt_columns_str,aftnm)
+        crt_hqsql=gen_crt_util(dbtb,partition_str,crt_columns_str,aftnm,ifpro)
         write_sql_to_file(dbtb_sql_file,crt_hqsql)
         logger.info(crt_hqsql)
     except Exception as err:
