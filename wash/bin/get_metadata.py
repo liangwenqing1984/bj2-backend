@@ -201,8 +201,7 @@ def get_casewhen_mate(logger,conn, tbid,ifpro):
         cursor.execute(sql)
         casewhen_mate = cursor.fetchall()
         if casewhen_mate == None or len(casewhen_mate)==0:
-            logger.error("根据表 %s 未获取清洗的字段、清洗运算代码、清洗执行顺序、字段顺序"%tbid)
-            raise Exception("[根据表 %s 未获取清洗的字段、清洗运算代码、清洗执行顺序、字段顺序]"%tbid)
+            logger.warn("根据表 %s 未获取清洗的字段、清洗运算代码、清洗执行顺序、字段顺序"%tbid)
         logger.info("casewhen_mate====\n" + str(casewhen_mate))
     except Exception as err:
         logger.error("获取清洗字段、清洗运算id、清洗顺序失败%s" %err)
@@ -362,18 +361,22 @@ def get_all_columns_deals(logger,conf, conn, tbid,ifpro):
 
 
 #更新作业状态
-def update_job_status(logger,conn,jobid,stat,startdt,enddt,tot=0,dump=0,pkdump=0):
+def update_job_status(logger,conn,jobid,stat,startdt,enddt,ifpro,tot=0,dump=0,pkdump=0,allpass=0):
     try:
         now_time = get_cur_time()
         cursor = conn.cursor()
         sql =   "update data_proc_job set Job_Stus= '{}' ,Rfrsh_Tm= '{}' ,Data_Start_Dt = '{}',"\
                 "Data_Terminate_Dt = '{}',Proc_Rec_Total_Qty={},All_Dupl_Rec_Qty={},Pk_Dupl_Rec_Qty={} "\
                 "where jobid = {}".format(stat,now_time,startdt,enddt,tot,dump,pkdump,jobid)
+
+        if ifpro == '1':
+            sql =   "replace into  prd_data_proc_job_result(Jobid,Job_Exec_Date,Proc_Rec_Total_Qty,All_Dupl_Rec_Qty,Pk_Dupl_Rec_Qty,All_Pass_Rec_Qty)" \
+                    " values('{}','{}','{}','{}','{}','{}');".format(jobid,startdt,tot,dump,pkdump,allpass)
         logger.info("update_job_sql====\n" + sql)
         cursor.execute(sql)
         conn.commit()
     except Exception as err:
-        logger.error("更新作业jobid: %s 状态失败 %s"%(jobid,err))
+        logger.error("更新作业jobid: %s 状态或结果表失败 %s"%(jobid,err))
         raise err
     finally:
         cursor.close()
@@ -413,16 +416,18 @@ def get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_d
         hcursor = hive_conn.cursor()
         tmpdbtb = dbtbmaps.get("05")+"_rowid"
         isudbtb = dbtbmaps.get("04")
+        clsdbtb = dbtbmaps.get("03")
         if(ifpro == '1'):
-           hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty) from ( "\
-                    "select count(1) as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  where data_dt = '{}' union "\
-                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  where data_dt='{}' and  isu_type='1' union "\
-                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty  from  {}  where data_dt='{}' and  isu_type='3' "\
-                    ") t".format(tmpdbtb,data_dt,isudbtb,data_dt,isudbtb,data_dt)
+           hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty),sum(All_Pass_Rec_Qty) from ( "\
+                    "select count(1) as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty from  {}  where data_dt = '{}' union "\
+                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty  from  {}  where data_dt='{}' and  isu_type='1' union "\
+                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty   from  {}  where data_dt='{}' and  isu_type='3' union "\
+                    "select 0 as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,count(1) as All_Pass_Rec_Qty from  {}  where data_dt = '{}'"\
+                    ") t".format(tmpdbtb,data_dt,isudbtb,data_dt,isudbtb,data_dt,clsdbtb,data_dt)
         else:
             tmpdbtb = tmpdbtb+"_"+jobid
             isudbtb = isudbtb+"_"+jobid
-            hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty) from ( "\
+            hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty),0 from ( "\
                     "select count(1) as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  union "\
                     "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  where  isu_type='1' union "\
                     "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty  from  {}  where  isu_type='3' "\
@@ -435,7 +440,8 @@ def get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_d
             Proc_Rec_Total_Qty = result[0]
             All_Dupl_Rec_Qty = result[1]
             Pk_Dupl_Rec_Qty = result[2]
-            return Proc_Rec_Total_Qty,All_Dupl_Rec_Qty,Pk_Dupl_Rec_Qty
+            All_Pass_Rec_Qty = result[3]
+            return Proc_Rec_Total_Qty,All_Dupl_Rec_Qty,Pk_Dupl_Rec_Qty,All_Pass_Rec_Qty
         else:
             return 0,0,0
     except Exception as err:
@@ -471,6 +477,7 @@ def get_hive_process_col_info(logger,conn,tbid,ifpro):
 #组装字段清洗统计SQL并执行返回结果
 def get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt):
     try:
+        hive_cursor = hive_conn.cursor()
         dbtbmaps = get_dbtbmaps_by_tbid(logger,conn, tbid)
         cls_dbtb = dbtbmaps.get("03")
         isu_dbtb = dbtbmaps.get("04")
@@ -478,30 +485,33 @@ def get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt
             cls_dbtb = cls_dbtb+"_"+jobid
             isu_dbtb = isu_dbtb+"_"+jobid
         mate_info_list = get_hive_process_col_info(logger,conn,tbid,ifpro)
-        sesql_in = ""
-        for i in (range(len(mate_info_list))):
-            fldid = mate_info_list[i].get("fldid")
-            fld_phys_nm = mate_info_list[i].get("fld_phys_nm")
-            data_wash_cmpuid = mate_info_list[i].get("data_wash_cmpuid")
-            data_wash_cmpu_cd = mate_info_list[i].get("data_wash_cmpu_cd")
-            tag = "%<" + conf.get('canClean',data_wash_cmpu_cd) + "#"+fld_phys_nm+">%"
-            if(ifpro == '1'):
-                if(i+1 == len(mate_info_list)):
-                    sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where data_dt='" + data_dt+"' and tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid ,0 as Wash_Rec_Qty,count(1) as Retn_Rec_Qty from " + isu_dbtb + " where data_dt='" +data_dt+ "' and isu_type='2'  and tagslwq like '"+ tag + "'  "
+        if mate_info_list == None or len(mate_info_list)==0:
+            logger.warn("当前表 %s 没有配置清洗规则!" %tbid)
+            return None
+        else:
+            sesql_in = ""
+            for i in (range(len(mate_info_list))):
+                fldid = mate_info_list[i].get("fldid")
+                fld_phys_nm = mate_info_list[i].get("fld_phys_nm")
+                data_wash_cmpuid = mate_info_list[i].get("data_wash_cmpuid")
+                data_wash_cmpu_cd = mate_info_list[i].get("data_wash_cmpu_cd")
+                tag = "%<" + conf.get('canClean',data_wash_cmpu_cd) + "#"+fld_phys_nm+">%"
+                if(ifpro == '1'):
+                    if(i+1 == len(mate_info_list)):
+                        sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where data_dt='" + data_dt+"' and tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid ,0 as Wash_Rec_Qty,count(1) as Retn_Rec_Qty from " + isu_dbtb + " where data_dt='" +data_dt+ "' and isu_type='2'  and tagslwq like '"+ tag + "'  "
+                    else:
+                        sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where data_dt='" + data_dt+"' and tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid ,0 as Wash_Rec_Qty,count(1) as Retn_Rec_Qty from " + isu_dbtb + " where data_dt='" +data_dt+ "' and isu_type='2'  and tagslwq like '"+ tag + "' union  "
                 else:
-                    sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where data_dt='" + data_dt+"' and tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid ,0 as Wash_Rec_Qty,count(1) as Retn_Rec_Qty from " + isu_dbtb + " where data_dt='" +data_dt+ "' and isu_type='2'  and tagslwq like '"+ tag + "' union  "
-            else:
-                if(i+1 == len(mate_info_list)):
-                    sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"'  as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where   tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,0 as Wash_Rec_Qty,count(1) as  Retn_Rec_Qty from " + isu_dbtb + " where   isu_type='2' and tagslwq like '"+ tag + "'  "
-                else:
-                    sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"'  as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where   tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,0 as Wash_Rec_Qty,count(1) as  Retn_Rec_Qty from " + isu_dbtb + " where   isu_type='2' and tagslwq like '"+ tag + "' union  "
+                    if(i+1 == len(mate_info_list)):
+                        sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"'  as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where   tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,0 as Wash_Rec_Qty,count(1) as  Retn_Rec_Qty from " + isu_dbtb + " where   isu_type='2' and tagslwq like '"+ tag + "'  "
+                    else:
+                        sesql_in += "select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"'  as data_wash_cmpuid,count(1) as Wash_Rec_Qty,0 as Retn_Rec_Qty from " + cls_dbtb + " where   tagslwq like '"+ tag + "' union   select '"+str(jobid)+"' as jobid,'"+str(fldid)+"' as fldid,'"+str(data_wash_cmpuid)+"' as data_wash_cmpuid,0 as Wash_Rec_Qty,count(1) as  Retn_Rec_Qty from " + isu_dbtb + " where   isu_type='2' and tagslwq like '"+ tag + "' union  "
 
-        sesql = "select jobid,fldid,data_wash_cmpuid,sum(Wash_Rec_Qty),sum(Retn_Rec_Qty) from ( " + sesql_in +") as t group by jobid,fldid,data_wash_cmpuid"
-        logger.info("sesql====\n"+sesql)
-        hive_cursor = hive_conn.cursor()
-        hive_cursor.execute(sesql)
-        result = hive_cursor.fetchall()
-        logger.info("hive_colum_static_result=====\n" + str(result))
+            sesql = "select jobid,fldid,data_wash_cmpuid,sum(Wash_Rec_Qty),sum(Retn_Rec_Qty) from ( " + sesql_in +") as t group by jobid,fldid,data_wash_cmpuid"
+            logger.info("sesql====\n"+sesql)
+            hive_cursor.execute(sesql)
+            result = hive_cursor.fetchall()
+            logger.info("hive_colum_static_result=====\n" + str(result))
     except Exception as err:
         logger.error("组装字段清洗统计SQL并执行返回结果失败%s" %err)
         raise err
@@ -512,19 +522,25 @@ def get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt
 
 # 更新字段统计数据到mysql
 def insert_col_static(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt):
-     static_rs = get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt)
+
      sql = ""
      try:
          cursor = conn.cursor()
-         for i in range(len(static_rs)):
-             jobid = static_rs[i][0]
-             fldid = static_rs[i][1]
-             data_wash_cmpuid = static_rs[i][2]
-             Wash_Rec_Qty = static_rs[i][3]
-             Retn_Rec_Qty = static_rs[i][4]
-             sql = "replace into FLD_WASH_RESULT(Jobid,Fldid,Data_Wash_Cmpuid,Wash_Rec_Qty,Retn_Rec_Qty) values({},{},{},{},{});".format(jobid,fldid,data_wash_cmpuid,Wash_Rec_Qty,Retn_Rec_Qty)
-             logger.info("insert_col_static====\n"+sql)
-             cursor.execute(sql)
+         static_rs = get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt)
+         if static_rs == None:
+             pass
+         else:
+             for i in range(len(static_rs)):
+                 jobid = static_rs[i][0]
+                 fldid = static_rs[i][1]
+                 data_wash_cmpuid = static_rs[i][2]
+                 Wash_Rec_Qty = static_rs[i][3]
+                 Retn_Rec_Qty = static_rs[i][4]
+                 sql = "replace into FLD_WASH_RESULT(Jobid,Fldid,Data_Wash_Cmpuid,Wash_Rec_Qty,Retn_Rec_Qty) values('{}','{}','{}','{}','{}');".format(jobid,fldid,data_wash_cmpuid,Wash_Rec_Qty,Retn_Rec_Qty)
+                 if ifpro == '1':
+                    sql = "replace into PRD_DATA_WASH_FLD_RESULT(Jobid,Fldid,Data_Wash_Cmpuid,Job_Exec_Date,Wash_Rec_Qty,Retn_Rec_Qty) values('{}','{}','{}','{}','{}','{}');".format(jobid,fldid,data_wash_cmpuid,data_dt,Wash_Rec_Qty,Retn_Rec_Qty)
+                 logger.info("insert_col_static====\n"+sql)
+                 cursor.execute(sql)
          conn.commit()
      except Exception as err:
          logger.error("更新字段统计数据到mysql失败%s" %err)
