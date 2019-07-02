@@ -11,7 +11,7 @@ create table tmpdb.cts
 drop table if exists tmpdb.hts;
 create table tmpdb.hts
             select t2.name as db_name, tbl_name, cls_dbid, param_value as cn_name 
-            from ${METASTORE_DB}.tbls t1 join
+            from (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t1 join
                 (select db_id, name, dbid as cls_dbid
                     from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
                     where name = db_phys_nm
@@ -100,7 +100,8 @@ create table tmpdb.hcs
             select c.*, t.TBL_NAME, d.db_name, 
                         concat(d.db_name, '.', t.tbl_name, '.', c.COLUMN_NAME) as col_full_name_hcs,
                         concat(d.db_name, '.', t.tbl_name) as tbl_full_name_hcs
-            from ${METASTORE_DB}.columns_v2 c, ${METASTORE_DB}.sds, ${METASTORE_DB}.tbls t,
+            from ${METASTORE_DB}.columns_v2 c, ${METASTORE_DB}.sds, 
+                (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t,
                 (select db_id, name as db_name, dbid as cls_dbid
                     from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
                     where name = db_phys_nm
