@@ -3,7 +3,7 @@ create table tmpdb.cts
         select tbl.*, db_phys_nm 
       from ${CLEANSE_DB}.db db, ${CLEANSE_DB}.data_part p, ${CLEANSE_DB}.data_tbl tbl
     where p.partid = db.partid
-        and db.dbid = tbl.dbid  
+        and db.dbid = tbl.dbid
         and p.tnmtid = ${TENANT_ID}
         and tbl.del_dt is null
 ;
@@ -13,9 +13,11 @@ create table tmpdb.hts
             select t2.name as db_name, tbl_name, cls_dbid, param_value as cn_name 
             from (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t1 join
                 (select db_id, name, dbid as cls_dbid
-                    from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
+                    from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p, ${CLEANSE_DB}.db_usage u
                     where name = db_phys_nm
                     and p.partid = db.partid
+                    and db.db_usageid = u.db_usageid
+                    and u.db_usage_cd in ('02', '03', '06')
                     and p.tnmtid = ${TENANT_ID}
                 ) t2
             on t1.DB_ID = t2.db_id
@@ -103,9 +105,11 @@ create table tmpdb.hcs
             from ${METASTORE_DB}.columns_v2 c, ${METASTORE_DB}.sds, 
                 (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t,
                 (select db_id, name as db_name, dbid as cls_dbid
-                    from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p
+                    from ${METASTORE_DB}.dbs, ${CLEANSE_DB}.db, ${CLEANSE_DB}.data_part p, ${CLEANSE_DB}.db_usage u
                     where name = db_phys_nm
                     and p.partid = db.partid
+                    and db.db_usageid = u.db_usageid
+                    and u.db_usage_cd in ('02', '03', '06')
                     and p.tnmtid = ${TENANT_ID}
                 ) d
             where d.DB_ID = t.db_id
