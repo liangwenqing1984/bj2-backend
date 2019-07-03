@@ -11,6 +11,7 @@ import os
 import logging
 from pyhive import hive
 import traceback
+import subprocess
 
 
 #帮助信息
@@ -99,7 +100,10 @@ def gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt):
     try:
         with open(hqlfile,"w") as f:
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'04',''))
-            f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'03','') )
+            if(ifpro == '0'):
+                f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls') )
+            elif(ifpro == '1'):
+                f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'03','') )
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_rowid'))
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_deal_dump'))
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_deal_column'))
@@ -186,9 +190,10 @@ def process(hqlfile,logger,conf,hive_conn,conn,tbid,mode,ifpro,pect,data_dt):
         else:
                 gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt)
                 gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect)
-
-
-        rtcode = os.system("beeline -u jdbc:hive2://"+hiveserver+":10000/ -n hive -f" +hqlfile )
+        beeline_cmd = "beeline -u jdbc:hive2://"+hiveserver+":10000/ -n hive -f " +hqlfile
+        logger.info("beeline_cmd====\n" + beeline_cmd)
+        rtcode = os.system(beeline_cmd)
+        logger.info("rtcode====\n" + str(rtcode))
         if(rtcode != 0):
             raise Exception("hive数据处理失败")
         insert_col_static(logger,config,hive_conn,conn,jobid,tbid,ifpro,data_dt)
@@ -224,10 +229,11 @@ if __name__ == '__main__':
             data_dt = sys.argv[6]
         elif len(sys.argv) == 6:
             data_dt = get_max_part_date_by_tbid(conn,tbid)
+            logger.info("max_data_dt====\n" + data_dt)
         if ifpro=='1':
             pect = 100
         process(hqlfile,logger,config,hive_conn,conn,tbid,mode,ifpro,pect,data_dt)
-        # gen_ins_sql(hqlfile,logger,config,hive_conn,conn,tbid,ifpro,data_dt,1000,pect)
+
     except Exception as err:
         update_job_status(logger,conn,jobid,'FAILED',data_dt,data_dt,ifpro,0,0,0,0)
         warning_message = traceback.format_exc()
@@ -341,3 +347,4 @@ if __name__ == '__main__':
         # get_casewhen_mate(logger,conn, tbid)
         # get_all_columns_cmpus_pkg(logger,conn, tbid,ifpro)
         # create_mysql_isu_tab(logger,conn,jobid,tbid)
+        # gen_ins_sql(hqlfile,logger,config,hive_conn,conn,tbid,ifpro,data_dt,1000,pect)

@@ -92,16 +92,16 @@ if __name__ == '__main__':
     publish_log_file = "../log/" + logiflenm
     logger = get_logger(publish_log_file)
     try:
-        wash_start_system=config.get("etlhome","wash_start_system")
-        wash_start_job=config.get("etlhome","wash_start_job")
-        wash_end_system=config.get("etlhome","wash_end_system")
-        wash_end_job=config.get("etlhome","wash_end_job")
         etl_system = str(get_etl_system_by_tbid(logger,wash_conn,tbid)).upper()
         tb_phys_nm = str(get_tb_phys_nm_by_tbid(logger,wash_conn,tbid)).upper()
         etl_job = etl_system+"_"+tb_phys_nm+"_WASH"
         scriptfile = str(etl_job).lower()+"0100.sh"
+        wash_start_system=etl_system
+        wash_start_job=etl_system+"_WASH_START_JOB"
+        wash_end_system=etl_system
+        wash_end_job=etl_system+"_WASH_END_JOB"
         description = "清洗作业-"+get_tb_cn_nm_by_tbid(logger,wash_conn,tbid)
-        if jobcat == '2':
+        if jobcat == '3':
             etl_job = etl_system+"_"+tb_phys_nm+"_MASK"
             scriptfile = str(etl_job).lower()+"0100.sh"
             description = "脱敏作业-"+get_tb_cn_nm_by_tbid(logger,wash_conn,tbid)

@@ -69,9 +69,12 @@ def get_dbtbmaps_by_tbid(logger,conn,tbid):
             logger.error("根据租户id: %s 未找出该租户下所有的库及用途代码!" %tnmtid)
             raise Exception("[根据租户id: %s 未找出该租户下所有的库及用途代码!]" %tnmtid)
         for item in result:
-            db_usage_cd = item.get("db_usage_cd")
-            db_tb_name = item.get("db_phys_nm")+"."+tbname
-            dbtbmaps[db_usage_cd] = db_tb_name
+            if item.get("db_phys_nm") == None or item.get("db_usage_cd") == None:
+                pass
+            else:
+                db_usage_cd = item.get("db_usage_cd")
+                db_tb_name = item.get("db_phys_nm")+"."+tbname
+                dbtbmaps[db_usage_cd] = db_tb_name
         logger.info("dbtbmaps====\n" + str(dbtbmaps))
     except Exception as err:
         logger.error("根据租户id %s 找出该租户下所有的库及用途代码失败%s" %(tnmtid,err))
@@ -482,7 +485,7 @@ def get_hive_process_col_hql(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt
         cls_dbtb = dbtbmaps.get("03")
         isu_dbtb = dbtbmaps.get("04")
         if(ifpro == '0'):
-            cls_dbtb = cls_dbtb+"_"+jobid
+            cls_dbtb = cls_dbtb = dbtbmaps.get("05")+"_cls_"+jobid
             isu_dbtb = isu_dbtb+"_"+jobid
         mate_info_list = get_hive_process_col_info(logger,conn,tbid,ifpro)
         if mate_info_list == None or len(mate_info_list)==0:
