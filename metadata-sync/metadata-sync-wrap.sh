@@ -1,7 +1,13 @@
 #!/bin/bash
 
 WORKDIR=$(dirname $(realpath $0))
+LOGDIR=$WORKDIR/logs
 TODAY=$(date +%Y-%m-%d)
 
-$WORKDIR/metadata-sync.sh $@ 1> $WORKDIR/metadata-sync.${TODAY}.log 2>&1
+if [ ! -d $LOGDIR ]; then
+	rm -f $LOGDIR
+	mkdir $LOGDIR
+fi
+
+$WORKDIR/metadata-sync.sh $@ 1> $LOGDIR/metadata-sync.${TODAY}.log 2>&1
 
