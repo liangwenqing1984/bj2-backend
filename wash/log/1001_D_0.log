@@ -1,0 +1,21 @@
+2019-06-28 23:44:45,516 - INFO: select t4.etl_syscd from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid left join tnmt t4 on t3.Tnmtid = t4.Tnmtid where t1.Data_Tblid= 1001 
+2019-06-28 23:44:45,516 - INFO: etl_syscd====
+FGW
+2019-06-28 23:44:45,517 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-28 23:44:45,518 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-28 23:44:45,518 - INFO: select data_tbl_cn_nm from data_tbl where data_tblid = 1001 
+2019-06-28 23:44:45,519 - INFO: data_tbl_cn_nm====
+历史库-梁文卿测试表
+2019-06-28 23:44:45,519 - INFO: etl_job_sql====
+replace into etl_job(ETL_System,ETL_Job,ETL_Server,Description,Frequency,JobType,Enable,Last_JobStatus,Last_FileCnt,CubeFlag,AutoOff,CheckCalendar,RunningScript,JobSessionID,ExpectedRecord,CheckLastStatus,TimeTrigger,Priority) values( 'FGW','FGW_LWQ_TEST_TB','etl1','清洗作业-历史库-梁文卿测试表','0','D','1','Ready','0','N','N','N','washtask0100.sh','0','0','Y','N','0')
+2019-06-28 23:44:45,520 - INFO: etl_job_dependency_sql====
+replace into etl_job_dependency(etl_system,etl_job,dependency_system,dependency_job,enable) values( 'FGW','FGW_LWQ_TEST_TB','HIS','DUMMY','1')
+2019-06-28 23:44:45,521 - INFO: etl_job_stream_sql====
+replace into etl_job_stream(etl_system,etl_job,stream_system,stream_job,enable) values( 'HIS','DUMMY','FGW','FGW_LWQ_TEST_TB','1')
+2019-06-28 23:44:45,522 - INFO: etl_job_step_sql====
+replace into etl_job_step(etl_system,etl_job,jobstepid,scriptid,scriptfile,enable) values( 'FGW','FGW_LWQ_TEST_TB','0100','101','washtask0100.sh','1')
+2019-06-28 23:44:45,523 - INFO: etl_job_source_sql====
+replace into etl_job_source(Source,ETL_System,ETL_Job,Conv_File_Head,AutoFilter,Alert,BeforeHour,BeforeMin,OffsetDay) values( 'FGW_LWQ_TEST_TB','FGW','FGW_LWQ_TEST_TB','FGW_LWQ_TEST_TB','0','0','0','0','0')
+2019-06-28 23:44:45,524 - INFO: etl_job_timewindow_sql====
+replace into etl_job_timewindow(etl_system,etl_job,allow,beginhour,endhour) values( 'FGW','FGW_LWQ_TEST_TB','Y','0','23')
