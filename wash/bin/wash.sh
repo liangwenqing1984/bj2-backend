@@ -8,9 +8,13 @@ SAMPLE=$5
 DATE=$6
 
 
-SCRIPT_DIR="/home/tomcat/wash/bin"
-VENV_DIR="/home/tomcat/dqc/venv"
-LOG_DIR="/home/tomcat/wash/log"
+#SCRIPT_DIR="/home/tomcat/wash/bin"
+#VENV_DIR="/home/tomcat/dqc/venv"
+#LOG_DIR="/home/tomcat/wash/log"
+
+SCRIPT_DIR="/home/etl/ETLAuto/wash/data_wash/bin"
+VENV_DIR="/home/etl/ETLAuto/wash/wash_venv"
+LOG_DIR="/home/etl/ETLAuto/wash/data_wash/log"
 
 CURR_TIME=`date +%Y%m%d%H%M%S`
 LOG_FILE=${JOB_ID}_${CURR_TIME}.log

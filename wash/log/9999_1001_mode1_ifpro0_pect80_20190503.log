@@ -1,0 +1,478 @@
+2019-06-24 15:35:48,071 - INFO: Begin to process 9999_1001_mode1_ifpro0_pect80_20190503
+2019-06-24 15:35:48,071 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,072 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,072 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,075 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,075 - INFO: select t2.Db_Phys_Nm,t4.data_tbl_phys_nm from data_part t1 left join db t2 on t1.partid = t2.Partid left join Db_Usage t3 on t2.Db_Usage = t3.Db_Usageid  left join data_tbl t4 on t2.Dbid = t4.dbid where t1.tnmtid = 3 and t3.db_usage_cd = '03' and t4.data_tbl_phys_nm = 'lwq_test_tb'
+2019-06-24 15:35:48,078 - INFO: Genarate  table  sql for job 9999_1001_0_20190503
+2019-06-24 15:35:48,078 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,091 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,092 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,098 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,099 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,102 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,102 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Data_Type,t1.Fld_Cn_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and t1.DEL_DT is null 
+2019-06-24 15:35:48,107 - INFO: crt_columns_str====
+		column1 string comment '字段1',
+		column2 string comment '字段2',
+		column3 double comment '字段3',
+		column4 date comment '字段4'
+2019-06-24 15:35:48,110 - INFO: drop table if exists isu_db_3.lwq_test_tb_9999;
+create table isu_db_3.lwq_test_tb_9999( 
+        rowid string,
+        column1 string comment '字段1',
+        column2 string comment '字段2',
+        column3 double comment '字段3',
+        column4 date comment '字段4',
+        tags string )
+partitioned by (isu_type string)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\001'
+LINES TERMINATED BY '\n' 
+STORED AS TEXTFILE;
+
+
+
+
+
+
+2019-06-24 15:35:48,111 - INFO: Genarate  table  sql for job 9999_1001_0_20190503
+2019-06-24 15:35:48,111 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,113 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,114 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,116 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,116 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,119 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,120 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Data_Type,t1.Fld_Cn_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and t1.DEL_DT is null 
+2019-06-24 15:35:48,121 - INFO: crt_columns_str====
+		column1 string comment '字段1',
+		column2 string comment '字段2',
+		column3 double comment '字段3',
+		column4 date comment '字段4'
+2019-06-24 15:35:48,123 - INFO: drop table if exists cls_db_3.lwq_test_tb_9999;
+create table cls_db_3.lwq_test_tb_9999( 
+        rowid string,
+        column1 string comment '字段1',
+        column2 string comment '字段2',
+        column3 double comment '字段3',
+        column4 date comment '字段4',
+        tags string )
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\001'
+LINES TERMINATED BY '\n' 
+STORED AS TEXTFILE;
+
+
+
+
+
+
+2019-06-24 15:35:48,123 - INFO: Genarate  table  sql for job 9999_1001_0_20190503_rowid
+2019-06-24 15:35:48,124 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,127 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,127 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,130 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,130 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,131 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,131 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Data_Type,t1.Fld_Cn_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and t1.DEL_DT is null 
+2019-06-24 15:35:48,134 - INFO: crt_columns_str====
+		column1 string comment '字段1',
+		column2 string comment '字段2',
+		column3 double comment '字段3',
+		column4 date comment '字段4'
+2019-06-24 15:35:48,135 - INFO: drop table if exists tmp_db_3.lwq_test_tb_rowid_9999;
+create table tmp_db_3.lwq_test_tb_rowid_9999( 
+        rowid string,
+        column1 string comment '字段1',
+        column2 string comment '字段2',
+        column3 double comment '字段3',
+        column4 date comment '字段4',
+        tags string )
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\001'
+LINES TERMINATED BY '\n' 
+STORED AS TEXTFILE;
+
+
+
+
+
+
+2019-06-24 15:35:48,135 - INFO: Genarate  table  sql for job 9999_1001_0_20190503_deal_dump
+2019-06-24 15:35:48,135 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,137 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,138 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,139 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,140 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,141 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,141 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Data_Type,t1.Fld_Cn_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and t1.DEL_DT is null 
+2019-06-24 15:35:48,144 - INFO: crt_columns_str====
+		column1 string comment '字段1',
+		column2 string comment '字段2',
+		column3 double comment '字段3',
+		column4 date comment '字段4'
+2019-06-24 15:35:48,145 - INFO: drop table if exists tmp_db_3.lwq_test_tb_deal_dump_9999;
+create table tmp_db_3.lwq_test_tb_deal_dump_9999( 
+        rowid string,
+        column1 string comment '字段1',
+        column2 string comment '字段2',
+        column3 double comment '字段3',
+        column4 date comment '字段4',
+        tags string )
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\001'
+LINES TERMINATED BY '\n' 
+STORED AS TEXTFILE;
+
+
+
+
+
+
+2019-06-24 15:35:48,145 - INFO: Genarate  table  sql for job 9999_1001_0_20190503_deal_column
+2019-06-24 15:35:48,145 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,147 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,148 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,150 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,150 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,154 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,154 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Data_Type,t1.Fld_Cn_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and t1.DEL_DT is null 
+2019-06-24 15:35:48,157 - INFO: crt_columns_str====
+		column1 string comment '字段1',
+		column2 string comment '字段2',
+		column3 double comment '字段3',
+		column4 date comment '字段4'
+2019-06-24 15:35:48,158 - INFO: drop table if exists tmp_db_3.lwq_test_tb_deal_column_9999;
+create table tmp_db_3.lwq_test_tb_deal_column_9999( 
+        rowid string,
+        column1 string comment '字段1',
+        column2 string comment '字段2',
+        column3 double comment '字段3',
+        column4 date comment '字段4',
+        tags string )
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY '\001'
+LINES TERMINATED BY '\n' 
+STORED AS TEXTFILE;
+
+
+
+
+
+
+2019-06-24 15:35:48,159 - INFO: 9999_1001_0_20190503_rowid
+2019-06-24 15:35:48,160 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and DEL_DT is null order by t1.Fld_Ord asc
+2019-06-24 15:35:48,161 - INFO: columns====
+['column1', 'column2', 'column3', 'column4']
+2019-06-24 15:35:48,161 - INFO: primary key columns====
+['column1', 'column2']
+2019-06-24 15:35:48,161 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,163 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,163 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,165 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,165 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,167 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,167 - INFO: select dp_path from dp t where t.data_tblid= 1001 and dp_dt= '2019-05-03';
+2019-06-24 15:35:48,169 - INFO: where_part_str====
+year=2019 and month=05 and day=03
+2019-06-24 15:35:48,171 - INFO: insert overwrite table tmp_db_3.lwq_test_tb_rowid_9999
+select 
+        default.md5(concat_ws(',',coalesce(cast(column1 as string),'\N'),coalesce(cast(column2 as string),'\N'),coalesce(cast(column3 as string),'\N'),coalesce(cast(column4 as string),'\N'))),
+        column1,
+        column2,
+        column3,
+        column4,
+        ''
+from his_db_3.lwq_test_tb TABLESAMPLE(80 PERCENT) 
+where year=2019 and month=05 and day=03;
+
+
+
+
+
+2019-06-24 15:35:48,171 - INFO: 9999_1001_0_20190503_deal_dump1
+2019-06-24 15:35:48,171 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and DEL_DT is null order by t1.Fld_Ord asc
+2019-06-24 15:35:48,173 - INFO: columns====
+['column1', 'column2', 'column3', 'column4']
+2019-06-24 15:35:48,173 - INFO: primary key columns====
+['column1', 'column2']
+2019-06-24 15:35:48,174 - INFO: select dp_path from dp t where t.data_tblid= 1001 and dp_dt= '2019-05-03';
+2019-06-24 15:35:48,174 - INFO: part_str====
+year=2019 , month=05 , day=03
+2019-06-24 15:35:48,174 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,176 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,177 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,177 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,177 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,180 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,183 - INFO: from(
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        row_number() over(partition by rowid ) as rank_num
+    from tmp_db_3.lwq_test_tb_rowid_9999 t ) as tt
+insert overwrite table tmp_db_3.lwq_test_tb_deal_dump_9999
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        ''
+     where rank_num=1
+insert overwrite table isu_db_3.lwq_test_tb_9999 partition(isu_type='1')
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        'rowid'
+     where rank_num>1;
+
+
+
+
+
+
+2019-06-24 15:35:48,183 - INFO: 9999_1001_0_20190503_deal_column
+2019-06-24 15:35:48,184 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and DEL_DT is null order by t1.Fld_Ord asc
+2019-06-24 15:35:48,186 - INFO: columns====
+['column1', 'column2', 'column3', 'column4']
+2019-06-24 15:35:48,187 - INFO: primary key columns====
+['column1', 'column2']
+2019-06-24 15:35:48,187 - INFO: select dp_path from dp t where t.data_tblid= 1001 and dp_dt= '2019-05-03';
+2019-06-24 15:35:48,188 - INFO: where_part_str====
+year=2019 and month=05 and day=03
+2019-06-24 15:35:48,188 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,190 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,191 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,193 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,193 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,194 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,195 - INFO: select t2.fld_phys_nm,t4.Data_Wash_Cmpu_Cd,t3.exct_ord,t2.fld_ord from data_tbl t1 left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid left join data_fld_wash_proj t3 on t2.Fldid = t3.Fldid left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid where t1.Data_Tblid = 1001 and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null order by t2.Fld_Ord asc ,exct_ord asc
+2019-06-24 15:35:48,197 - INFO: casewhen_mate====
+[{'fld_ord': 1, 'fld_phys_nm': 'column1', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 2, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 3, 'Data_Wash_Cmpu_Cd': '0003'}]
+2019-06-24 15:35:48,197 - INFO: case_when_str====
+			case when default.canCleanTrim(column1) = 2 then '<Trim#column1>' else '' end,
+
+2019-06-24 15:35:48,197 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+
+2019-06-24 15:35:48,197 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+
+2019-06-24 15:35:48,197 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end)
+
+2019-06-24 15:35:48,198 - INFO: case_when_str====
+        concat(            case when default.canCleanTrim(column1) = 2 then '<Trim#column1>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end)
+
+2019-06-24 15:35:48,198 - INFO: select t2.fld_phys_nm,t4.Data_Wash_Cmpu_Cd,t3.exct_ord,t2.fld_ord from data_tbl t1 left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid left join data_fld_wash_proj t3 on t2.Fldid = t3.Fldid left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid where t1.Data_Tblid = 1001 and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null order by t2.Fld_Ord asc ,exct_ord asc
+2019-06-24 15:35:48,200 - INFO: casewhen_mate====
+[{'fld_ord': 1, 'fld_phys_nm': 'column1', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 2, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 3, 'Data_Wash_Cmpu_Cd': '0003'}]
+2019-06-24 15:35:48,201 - INFO: where_or_str====
+	default.canCleanTrim(column1) = 2
+
+2019-06-24 15:35:48,201 - INFO: where_or_str====
+	or default.canCleanTrim(column2) = 2
+
+2019-06-24 15:35:48,201 - INFO: where_or_str====
+	or default.canCleanTrim(column2) = 2
+
+2019-06-24 15:35:48,201 - INFO: where_or_str====
+	or default.canCleanTrim(column2) = 2
+
+2019-06-24 15:35:48,201 - INFO: where_or_str====
+where 
+    default.canCleanTrim(column1) = 2
+    or default.canCleanTrim(column2) = 2
+    or default.canCleanTrim(column2) = 2
+    or default.canCleanTrim(column2) = 2
+
+2019-06-24 15:35:48,201 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and DEL_DT is null order by t1.Fld_Ord asc
+2019-06-24 15:35:48,203 - INFO: columns====
+['column1', 'column2', 'column3', 'column4']
+2019-06-24 15:35:48,204 - INFO: primary key columns====
+['column1', 'column2']
+2019-06-24 15:35:48,204 - INFO: select t2.fld_phys_nm,t4.Data_Wash_Cmpu_Cd,t3.exct_ord,t2.fld_ord from data_tbl t1 left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid left join data_fld_wash_proj t3 on t2.Fldid = t3.Fldid left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid where t1.Data_Tblid = 1001 and t2.Del_Dt is null  order by t2.Fld_Ord asc ,exct_ord asc
+2019-06-24 15:35:48,212 - INFO: columns_cmpu====
+[{'fld_ord': 1, 'fld_phys_nm': 'column1', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 2, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 3, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 3, 'fld_phys_nm': 'column3', 'exct_ord': None, 'Data_Wash_Cmpu_Cd': None}, {'fld_ord': 4, 'fld_phys_nm': 'column4', 'exct_ord': None, 'Data_Wash_Cmpu_Cd': None}]
+2019-06-24 15:35:48,213 - INFO: dealed_list_str====
+		trim(column1),
+		trim(trim(trim(column2))),
+		column3,
+		column4,
+
+2019-06-24 15:35:48,213 - INFO: select t2.fld_phys_nm,t4.Data_Wash_Cmpu_Cd,t3.exct_ord,t2.fld_ord from data_tbl t1 left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid left join data_fld_wash_proj t3 on t2.Fldid = t3.Fldid left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid where t1.Data_Tblid = 1001 and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null order by t2.Fld_Ord asc ,exct_ord asc
+2019-06-24 15:35:48,217 - INFO: casewhen_mate====
+[{'fld_ord': 1, 'fld_phys_nm': 'column1', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 2, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 3, 'Data_Wash_Cmpu_Cd': '0003'}]
+2019-06-24 15:35:48,217 - INFO: case_when_str====
+			case when default.canCleanTrim(column1) = 1 then '<Trim#column1>' else '' end,
+
+2019-06-24 15:35:48,217 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+
+2019-06-24 15:35:48,218 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+
+2019-06-24 15:35:48,219 - INFO: case_when_str====
+			case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end)
+
+2019-06-24 15:35:48,219 - INFO: case_when_str====
+        concat(            case when default.canCleanTrim(column1) = 1 then '<Trim#column1>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end)
+
+2019-06-24 15:35:48,219 - INFO: select t2.fld_phys_nm,t4.Data_Wash_Cmpu_Cd,t3.exct_ord,t2.fld_ord from data_tbl t1 left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid left join data_fld_wash_proj t3 on t2.Fldid = t3.Fldid left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid where t1.Data_Tblid = 1001 and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null order by t2.Fld_Ord asc ,exct_ord asc
+2019-06-24 15:35:48,221 - INFO: casewhen_mate====
+[{'fld_ord': 1, 'fld_phys_nm': 'column1', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 1, 'Data_Wash_Cmpu_Cd': '0002'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 2, 'Data_Wash_Cmpu_Cd': '0003'}, {'fld_ord': 2, 'fld_phys_nm': 'column2', 'exct_ord': 3, 'Data_Wash_Cmpu_Cd': '0003'}]
+2019-06-24 15:35:48,222 - INFO: where_or_str====
+	default.canCleanTrim(column1) != 2
+
+2019-06-24 15:35:48,222 - INFO: where_or_str====
+	and default.canCleanTrim(column2) != 2
+
+2019-06-24 15:35:48,223 - INFO: where_or_str====
+	and default.canCleanTrim(column2) != 2
+
+2019-06-24 15:35:48,223 - INFO: where_or_str====
+	and default.canCleanTrim(column2) != 2
+
+2019-06-24 15:35:48,223 - INFO: where_or_str====
+where 
+    default.canCleanTrim(column1) != 2
+    and default.canCleanTrim(column2) != 2
+    and default.canCleanTrim(column2) != 2
+    and default.canCleanTrim(column2) != 2
+
+2019-06-24 15:35:48,224 - INFO: from (
+    select * from tmp_db_3.lwq_test_tb_deal_dump_9999
+) t
+insert into isu_db_3.lwq_test_tb_9999 partition(isu_type='2')
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        concat(            case when default.canCleanTrim(column1) = 2 then '<Trim#column1>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 2 then '<Trim#column2>' else '' end)
+                                                                                    as tags
+where 
+    default.canCleanTrim(column1) = 2
+    or default.canCleanTrim(column2) = 2
+    or default.canCleanTrim(column2) = 2
+    or default.canCleanTrim(column2) = 2
+insert  overwrite table tmp_db_3.lwq_test_tb_deal_column_9999
+    select
+        rowid,
+        trim(column1),
+        trim(trim(trim(column2))),
+        column3,
+        column4,
+        concat(            case when default.canCleanTrim(column1) = 1 then '<Trim#column1>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end,
+            case when default.canCleanTrim(column2) = 1 then '<Trim#column2>' else '' end)
+                                                                                    as tags
+where 
+    default.canCleanTrim(column1) != 2
+    and default.canCleanTrim(column2) != 2
+    and default.canCleanTrim(column2) != 2
+    and default.canCleanTrim(column2) != 2
+;
+
+
+
+
+
+
+2019-06-24 15:35:48,224 - INFO: 9999_1001_0_20190503_deal_dump_2
+2019-06-24 15:35:48,225 - INFO: select t1.Fld_Phys_Nm,t1.Fld_Ord,t1.If_Pk from data_fld t1 where t1.data_tblid= 1001 and DEL_DT is null order by t1.Fld_Ord asc
+2019-06-24 15:35:48,229 - INFO: columns====
+['column1', 'column2', 'column3', 'column4']
+2019-06-24 15:35:48,229 - INFO: primary key columns====
+['column1', 'column2']
+2019-06-24 15:35:48,230 - INFO: select dp_path from dp t where t.data_tblid= 1001 and dp_dt= '2019-05-03';
+2019-06-24 15:35:48,233 - INFO: part_str====
+year=2019 , month=05 , day=03
+2019-06-24 15:35:48,233 - INFO: select t3.tnmtid from data_tbl t1 left join db t2 on t1.Dbid = t2.dbid left join data_part t3 on t2.Partid = t3.partid where t1.Data_Tblid= 1001 
+2019-06-24 15:35:48,239 - INFO: tnmtid====
+3
+2019-06-24 15:35:48,240 - INFO: select data_tbl_phys_nm from data_tbl where data_tblid = 1001 
+2019-06-24 15:35:48,241 - INFO: data_tbl_phys_nm====
+lwq_test_tb
+2019-06-24 15:35:48,241 - INFO: select t2.db_phys_nm,db_usage_cd from data_part t1 left join db t2 on t1.partid = t2.partid  left join db_usage t3 on t2.db_usage = t3.db_usageid  where t1.tnmtid = 3 
+2019-06-24 15:35:48,243 - INFO: dbtbmaps====
+{'02': 'his_db_3.lwq_test_tb', '01': 'cvg_db_3.lwq_test_tb', '04': 'isu_db_3.lwq_test_tb', '03': 'cls_db_3.lwq_test_tb', '05': 'tmp_db_3.lwq_test_tb'}
+2019-06-24 15:35:48,245 - INFO: from(
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        tags,
+        row_number() over(partition by column1,column2) as rank_num
+    from tmp_db_3.lwq_test_tb_deal_column_9999 t ) as tt
+insert overwrite table cls_db_3.lwq_test_tb_9999
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        tags
+     where rank_num=1
+insert overwrite table isu_db_3.lwq_test_tb_9999 partition(isu_type='3')
+    select
+        rowid,
+        column1,
+        column2,
+        column3,
+        column4,
+        tags
+     where rank_num>1;
+
+
+
+
+
+
+2019-06-24 15:35:48,246 - INFO: Process finished success ,exit!
