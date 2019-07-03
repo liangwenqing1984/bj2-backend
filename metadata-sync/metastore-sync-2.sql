@@ -65,12 +65,37 @@ where p.db_name = t1.db_phys_nm
 and p.tbl_name = t1.data_tbl_phys_nm 
 ;
 
-delete from ${CLEANSE_DB}.data_tbl where del_dt is null;
+delete from ${CLEANSE_DB}.data_tbl 
+where 
+	del_dt is null 
+and dbid in (
+	select dbid 
+	from ${CLEANSE_DB}.db d, ${CLEANSE_DB}.data_part p
+	where d.partid = p.partid
+	and p.tnmtid = ${TENANT_ID}
+);
 insert into ${CLEANSE_DB}.data_tbl select * from tmpdb.data_tbl_upd;
-delete from ${CLEANSE_DB}.data_fld where del_dt is null;
-insert into ${CLEANSE_DB}.data_fld select * from tmpdb.data_fld;
-delete from ${CLEANSE_DB}.dp; 
-insert into ${CLEANSE_DB}.dp select * from tmpdb.dp;
 
+delete from ${CLEANSE_DB}.data_fld 
+where 
+	del_dt is null
+and data_tblid in (
+	select data_tblid
+	from ${CLEANSE_DB}.data_tbl t, ${CLEANSE_DB}.db d, ${CLEANSE_DB}.data_part p
+	where t.dbid = d.dbid
+	and d.partid = p.partid
+	and p.tnmtid = ${TENANT_ID}
+);
+insert into ${CLEANSE_DB}.data_fld select * from tmpdb.data_fld;
+
+delete from ${CLEANSE_DB}.dp
+where data_tblid in (
+	select data_tblid
+	from ${CLEANSE_DB}.data_tbl t, ${CLEANSE_DB}.db d, ${CLEANSE_DB}.data_part p
+	where t.dbid = d.dbid
+	and d.partid = p.partid
+	and p.tnmtid = ${TENANT_ID}
+);
+insert into ${CLEANSE_DB}.dp select * from tmpdb.dp;
 
 

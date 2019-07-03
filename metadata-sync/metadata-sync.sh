@@ -56,7 +56,7 @@ source $WORKDIR/metastore-sync-1.sql.run
 END
 
 echo "Calculating Table UUID ..."
-mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D tmpdb -N -e 'select data_tblid from data_tbl where data_tbl_uuid is null' | $WORKDIR/gen-uuid-script.sh > $WORKDIR/load-tbl-uuid.sql
+mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D tmpdb -N -e 'select data_tblid from data_tbl where data_tbl_uuid is null' | $CUR_DIR/gen-uuid-script.sh > $WORKDIR/load-tbl-uuid.sql
 mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  < $WORKDIR/load-tbl-uuid.sql
 
 echo "Syncronizing metadata phase 2 ..."
