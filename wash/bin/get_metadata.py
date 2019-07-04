@@ -135,7 +135,10 @@ def get_crt_columns_by_tbid(logger,conn, tbid):
             Fld_Phys_Nm = result[i].get("Fld_Phys_Nm")
             Fld_Data_Type = result[i].get("Fld_Data_Type")
             Fld_Cn_Nm = result[i].get("Fld_Cn_Nm")
-            crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment '" + Fld_Cn_Nm + "'"
+            if(Fld_Cn_Nm == None):
+                crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment ''"
+            else:
+                crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment '" + Fld_Cn_Nm + "'"
             crt_columns.append(crt_column)
         crt_columns_str = list_to_str(crt_columns)
         logger.info("crt_columns_str====\n" + str(crt_columns_str))
