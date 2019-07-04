@@ -27,6 +27,9 @@ left join (select distinct data_tblid from tmpdb.data_fld where upd_dt = current
 drop table if exists tmpdb.dp;
 create table tmpdb.dp like ${CLEANSE_DB}.dp;
 
+insert into tmpdb.dp (dpid) select max(dpid) from ${CLEANSE_DB}.dp;
+delete from tmpdb.dp;
+
 insert into tmpdb.dp (data_tblid, dp_dt, dp_path, rec_qty)
 SELECT t1.data_tblid, p.part_date, p.part_name, p.numRows
 FROM

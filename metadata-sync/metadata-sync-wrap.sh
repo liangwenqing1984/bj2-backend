@@ -9,5 +9,5 @@ if [ ! -d $LOGDIR ]; then
 	mkdir $LOGDIR
 fi
 
-$WORKDIR/metadata-sync.sh $@ 1> $LOGDIR/metadata-sync.${TODAY}.log 2>&1
+$WORKDIR/metadata-sync.sh $@ 1>> $LOGDIR/metadata-sync.${TODAY}.log 2>&1
 
