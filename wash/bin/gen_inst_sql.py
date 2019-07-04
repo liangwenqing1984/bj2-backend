@@ -170,7 +170,8 @@ def get_pk_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
             partition_columns_str = list_to_str3(columns)
         if(ifpro == "0"):
             rowid_dbtb_name = dbtbmaps.get("05") + "_rowid_"+jobid
-            cls_dbtb_name = dbtbmaps.get("03")+"_"+jobid
+            # cls_dbtb_name = dbtbmaps.get("03")+"_"+jobid
+            cls_dbtb_name = dbtbmaps.get("05")+"_cls_"+jobid
             isu_dbtb_name = dbtbmaps.get("04")+"_"+jobid
             tmp_dbtb_name = dbtbmaps.get("05") + "_deal_column_"+jobid
             ins_sql_file = InsDevDir + jobinfo + ".sql"
@@ -214,7 +215,7 @@ def get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt):
         if(ifpro == '0'):
             rowid_dbtb_name = rowid_dbtb_name +"_"+jobid
             isu_dbtb_name = isu_dbtb_name +"_"+jobid
-            tmp_dbtb_name_deal_dump = tmp_dbtb_name_deal_dump+"_"+jobid
+            tmp_dbtb_name_deal_dump = dbtbmaps.get("05")+"_cls_"+jobid
             ins_sql_file = InsDevDir + jobinfo + ".sql"
             where_par_str=") as tt\n"
             ins_par_str1 = "\n"

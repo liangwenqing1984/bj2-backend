@@ -11,7 +11,7 @@ import traceback
 def pub_help():
     print("参数错误!\n\t示例:python publish.py 1001 1 1 D 0\n"
           "\t参数1:表id\n"
-          "\t参数2:作业类型(1:清洗作业，2：脱敏作业)\n"
+          "\t参数2:作业类型(1:清洗作业，3：脱敏作业)\n"
           "\t参数3:作业发布删除标识(1:发布 0:删除)\n"
           "\t参数4:作业周期类型\n"
           "\t参数5:作业运行日期(0、1、2、3...31、-1)\n"
@@ -72,7 +72,7 @@ def process(logger,conf,etl_conn,jobcat,delflag,etl_server,scriptid,scriptfile,e
         raise err
 
 if __name__ == '__main__':
-    if len(sys.argv) != 6 or (sys.argv[2] !='1' and sys.argv[2]!= '2') or (sys.argv[3] !='1' and sys.argv[3]!= '0'):
+    if len(sys.argv) != 6 or (sys.argv[2] !='1' and sys.argv[2]!= '3') or (sys.argv[3] !='1' and sys.argv[3]!= '0'):
         pub_help()
         exit(1)
 
@@ -92,16 +92,16 @@ if __name__ == '__main__':
     publish_log_file = "../log/" + logiflenm
     logger = get_logger(publish_log_file)
     try:
-        wash_start_system=config.get("etlhome","wash_start_system")
-        wash_start_job=config.get("etlhome","wash_start_job")
-        wash_end_system=config.get("etlhome","wash_end_system")
-        wash_end_job=config.get("etlhome","wash_end_job")
         etl_system = str(get_etl_system_by_tbid(logger,wash_conn,tbid)).upper()
         tb_phys_nm = str(get_tb_phys_nm_by_tbid(logger,wash_conn,tbid)).upper()
         etl_job = etl_system+"_"+tb_phys_nm+"_WASH"
         scriptfile = str(etl_job).lower()+"0100.sh"
+        wash_start_system=etl_system
+        wash_start_job=etl_system+"_WASH_START_JOB"
+        wash_end_system=etl_system
+        wash_end_job=etl_system+"_WASH_END_JOB"
         description = "清洗作业-"+get_tb_cn_nm_by_tbid(logger,wash_conn,tbid)
-        if jobcat == '2':
+        if jobcat == '3':
             etl_job = etl_system+"_"+tb_phys_nm+"_MASK"
             scriptfile = str(etl_job).lower()+"0100.sh"
             description = "脱敏作业-"+get_tb_cn_nm_by_tbid(logger,wash_conn,tbid)
