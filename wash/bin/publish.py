@@ -11,7 +11,7 @@ import traceback
 def pub_help():
     print("参数错误!\n\t示例:python publish.py 1001 1 1 D 0\n"
           "\t参数1:表id\n"
-          "\t参数2:作业类型(1:清洗作业，2：脱敏作业)\n"
+          "\t参数2:作业类型(1:清洗作业，3：脱敏作业)\n"
           "\t参数3:作业发布删除标识(1:发布 0:删除)\n"
           "\t参数4:作业周期类型\n"
           "\t参数5:作业运行日期(0、1、2、3...31、-1)\n"
@@ -72,7 +72,7 @@ def process(logger,conf,etl_conn,jobcat,delflag,etl_server,scriptid,scriptfile,e
         raise err
 
 if __name__ == '__main__':
-    if len(sys.argv) != 6 or (sys.argv[2] !='1' and sys.argv[2]!= '2') or (sys.argv[3] !='1' and sys.argv[3]!= '0'):
+    if len(sys.argv) != 6 or (sys.argv[2] !='1' and sys.argv[2]!= '3') or (sys.argv[3] !='1' and sys.argv[3]!= '0'):
         pub_help()
         exit(1)
 

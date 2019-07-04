@@ -258,7 +258,7 @@ def check_trigger_job_is_exist(logger,etl_conn,etl_system):
         logger.info("sql====\n"+sql)
         cursor.execute(sql)
         result = cursor.fetchone()
-        if(result.get("cntt") == 0):
+        if(result.get("cnt") == 0):
             return 0
         else:
             return 1
@@ -288,7 +288,7 @@ def create_trigger_etl_job(logger,etl_conn,etl_server,etl_system,start_end_flag)
             scriptfile = end_scriptfile
         cursor = etl_conn.cursor()
         sql =   "replace into etl_job(ETL_System,ETL_Job,ETL_Server,Description,Frequency,JobType,Enable,Last_JobStatus,Last_FileCnt,CubeFlag,CheckFlag,AutoOff,CheckCalendar,RunningScript,JobSessionID,ExpectedRecord,CheckLastStatus,TimeTrigger,Priority) values( "\
-                "'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(etl_system,etl_job,etl_server,'','0','D','1','Ready','0','N','N','N','N',scriptfile,'0','0','Y','N','0')
+                "'{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(etl_system,etl_job,etl_server,etl_job,'0','D','1','Ready','0','N','N','N','N',scriptfile,'0','0','Y','N','0')
         logger.info("sql====\n" + sql)
         cursor.execute(sql)
         # etl_conn.commit()
@@ -442,7 +442,7 @@ def check_etl_sys_exist(logger,etl_conn,etl_system):
         result = cursor.fetchone()
         if(result.get("cnt") == 0):
             sql = "replace into etl_sys(ETL_System,Description,DataKeepPeriod,LogKeepPeriod,RecordKeepPeriod,Priority,Concurrent) " \
-                  "values('{}','{}','{}','{}','{}','{}','{}')".format(etl_system,'','10','100','10','10','10')
+                  "values('{}','{}','{}','{}','{}','{}','{}')".format(etl_system,etl_system,'10','100','10','10','10')
             logger.info("sql====\n"+sql)
             cursor.execute(sql)
             etl_conn.commit()
