@@ -9,8 +9,11 @@ if [ $# -lt 2 ]; then
     exit -1
 fi
 
+JOB_ID=$1
+TENANT_ID=$2
+
 CUR_DIR=$(dirname $(realpath $0))
-WORKDIR=$CUR_DIR/work
+WORKDIR=$CUR_DIR/work.$TENANT_ID
 
 if [ ! -d $WORKDIR ]; then
 	rm -f $WORKDIR
@@ -23,8 +26,8 @@ fi
 
 source $CUR_DIR/set-env.sh
 
-JOB_ID=$1
-TENANT_ID=$2
+export CLEANSE_METADB_NAME=${CLEANSE_METADB_NAME}_$TENANT_ID
+export TMP_DB_NAME=tmpdb_$TENANT_ID
 
 METASTORE_TABLE_FILTER="tbl_name not like 'h_bj18_frk%' and tbl_name not like 'h_bj53_web%' and tbl_name not like 'h_bj18_db%' and tbl_name not like 'h_bj30_stat%'"
 
@@ -39,8 +42,8 @@ date
 mysqldump -h $METASTORE_DB_HOST -P $METASTORE_DB_PORT -u$METASTORE_DB_USER -p$METASTORE_DB_PASS \
 $METASTORE_DB_NAME columns_v2 tbls dbs partitions partition_params sds table_params > $WORKDIR/metastore.sql
 
-cat $CUR_DIR/metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-1.sql.run
-cat $CUR_DIR/metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-2.sql.run
+cat $CUR_DIR/metastore-sync-1.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${TMP_DB_NAME}/$TMP_DB_NAME/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-1.sql.run
+cat $CUR_DIR/metastore-sync-2.sql|sed "s/\${METASTORE_DB}/$CLEANSE_METADB_NAME/g;s/\${CLEANSE_DB}/$CLEANSE_DB_NAME/g;s/\${TENANT_ID}/$TENANT_ID/g;s/\${TMP_DB_NAME}/$TMP_DB_NAME/g;s/\${METASTORE_TABLE_FILTER}/$METASTORE_TABLE_FILTER/g" > $WORKDIR/metastore-sync-2.sql.run
 
 echo "Loading metadata to cleanse database ..."
 date
@@ -56,7 +59,7 @@ source $WORKDIR/metastore-sync-1.sql.run
 END
 
 echo "Calculating Table UUID ..."
-mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D tmpdb -N -e 'select data_tblid from data_tbl where data_tbl_uuid is null' | $CUR_DIR/gen-uuid-script.sh > $WORKDIR/load-tbl-uuid.sql
+mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D $TMP_DB_NAME -N -e 'select data_tblid from data_tbl where data_tbl_uuid is null' | $CUR_DIR/gen-uuid-script.sh > $WORKDIR/load-tbl-uuid.sql
 mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  < $WORKDIR/load-tbl-uuid.sql
 
 echo "Syncronizing metadata phase 2 ..."

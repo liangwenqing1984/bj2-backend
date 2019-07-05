@@ -1,5 +1,5 @@
-drop table if exists tmpdb.cts;
-create table tmpdb.cts
+drop table if exists ${TMP_DB_NAME}.cts;
+create table ${TMP_DB_NAME}.cts
         select tbl.*, db_phys_nm 
       from ${CLEANSE_DB}.db db, ${CLEANSE_DB}.data_part p, ${CLEANSE_DB}.data_tbl tbl
     where p.partid = db.partid
@@ -8,8 +8,8 @@ create table tmpdb.cts
         and tbl.del_dt is null
 ;
 
-drop table if exists tmpdb.hts;
-create table tmpdb.hts
+drop table if exists ${TMP_DB_NAME}.hts;
+create table ${TMP_DB_NAME}.hts
             select t2.name as db_name, tbl_name, cls_dbid, param_value as cn_name 
             from (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t1 join
                 (select db_id, name, dbid as cls_dbid
@@ -25,12 +25,12 @@ create table tmpdb.hts
       on t1.tbl_id = t3.tbl_id
 ;
 
-drop table if exists tmpdb.data_tbl;
-create table tmpdb.data_tbl like ${CLEANSE_DB}.data_tbl;
-insert into tmpdb.data_tbl (data_tblid) select max(data_tblid) from ${CLEANSE_DB}.data_tbl;
-delete from tmpdb.data_tbl;
+drop table if exists ${TMP_DB_NAME}.data_tbl;
+create table ${TMP_DB_NAME}.data_tbl like ${CLEANSE_DB}.data_tbl;
+insert into ${TMP_DB_NAME}.data_tbl (data_tblid) select max(data_tblid) from ${CLEANSE_DB}.data_tbl;
+delete from ${TMP_DB_NAME}.data_tbl;
 
-insert into tmpdb.data_tbl 
+insert into ${TMP_DB_NAME}.data_tbl 
 select data_tblid, 
             coalesce(dbid, cls_dbid), 
             coalesce(data_tbl_phys_nm, tbl_name), 
@@ -44,19 +44,19 @@ select data_tblid,
             data_srcid
 from 
 (select *
-from tmpdb.cts left join tmpdb.hts
+from ${TMP_DB_NAME}.cts left join ${TMP_DB_NAME}.hts
         on concat(cts.db_phys_nm, cts.data_tbl_phys_nm) = concat(hts.db_name, hts.tbl_name)
 UNION
 select *
-from tmpdb.cts right join tmpdb.hts
+from ${TMP_DB_NAME}.cts right join ${TMP_DB_NAME}.hts
         on concat(cts.db_phys_nm, cts.data_tbl_phys_nm) = concat(hts.db_name, hts.tbl_name)
 ) t
 ;
 
 
 
-drop table if exists tmpdb.ccs;
-create table tmpdb.ccs
+drop table if exists ${TMP_DB_NAME}.ccs;
+create table ${TMP_DB_NAME}.ccs
 (
   `Fldid` int(11) NOT NULL ,
   `Data_Tblid` int(11) ,
@@ -86,8 +86,8 @@ create table tmpdb.ccs
         and p.tnmtid = ${TENANT_ID}
 ;
 
-drop table if exists tmpdb.hcs;
-create table tmpdb.hcs
+drop table if exists ${TMP_DB_NAME}.hcs;
+create table ${TMP_DB_NAME}.hcs
 (
     cd_id    bigint not null,
     comment varchar(256),
@@ -117,15 +117,15 @@ create table tmpdb.hcs
             and sds.cd_id = c.cd_id
 ;
 
-create index ccsidx on tmpdb.ccs(col_full_name_ccs);
-create index hcsidx on tmpdb.hcs(col_full_name_hcs);
+create index ccsidx on ${TMP_DB_NAME}.ccs(col_full_name_ccs);
+create index hcsidx on ${TMP_DB_NAME}.hcs(col_full_name_hcs);
 
-drop table if exists tmpdb.data_fld;
-create table tmpdb.data_fld like ${CLEANSE_DB}.data_fld;
-insert into tmpdb.data_fld (fldid) select max(fldid) from ${CLEANSE_DB}.data_fld;
-delete from tmpdb.data_fld;
+drop table if exists ${TMP_DB_NAME}.data_fld;
+create table ${TMP_DB_NAME}.data_fld like ${CLEANSE_DB}.data_fld;
+insert into ${TMP_DB_NAME}.data_fld (fldid) select max(fldid) from ${CLEANSE_DB}.data_fld;
+delete from ${TMP_DB_NAME}.data_fld;
 
-insert into tmpdb.data_fld
+insert into ${TMP_DB_NAME}.data_fld
 select c.fldid
 ,t.data_tblid
 ,coalesce(c.fld_phys_nm, c.column_name)
@@ -144,16 +144,16 @@ select c.fldid
 ,case when c.column_name is null then current_date else null end
 from
 (select *, coalesce(tbl_full_name_ccs, tbl_full_name_hcs) as tbl_full_name
-from tmpdb.ccs left join tmpdb.hcs
+from ${TMP_DB_NAME}.ccs left join ${TMP_DB_NAME}.hcs
         on col_full_name_ccs = hcs.col_full_name_hcs
 UNION
 select *, coalesce(tbl_full_name_ccs, tbl_full_name_hcs) as tbl_full_name
-from tmpdb.ccs right join tmpdb.hcs
+from ${TMP_DB_NAME}.ccs right join ${TMP_DB_NAME}.hcs
         on col_full_name_ccs = hcs.col_full_name_hcs
 ) c,
 (select t.data_tblid, t.data_tbl_phys_nm, db.db_phys_nm, 
     concat(db.Db_Phys_Nm, '.', t.data_tbl_phys_nm) as tbl_full_name
-    from tmpdb.data_tbl t, ${CLEANSE_DB}.db
+    from ${TMP_DB_NAME}.data_tbl t, ${CLEANSE_DB}.db
     WHERE t.dbid = db.Dbid
 ) t
 where 

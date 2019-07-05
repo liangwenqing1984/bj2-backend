@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "use tmpdb;"
+echo "use ${TMP_DB_NAME};"
 echo "drop table if exists data_tbl_uuid;"
 echo "create table data_tbl_uuid(data_tblid int, data_tbl_uuid varchar(60), primary key(data_tblid));"
 

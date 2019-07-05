@@ -1,7 +1,7 @@
-drop table if exists tmpdb.data_tbl_upd;
-create table tmpdb.data_tbl_upd like tmpdb.data_tbl;
+drop table if exists ${TMP_DB_NAME}.data_tbl_upd;
+create table ${TMP_DB_NAME}.data_tbl_upd like ${TMP_DB_NAME}.data_tbl;
 
-insert into tmpdb.data_tbl_upd 
+insert into ${TMP_DB_NAME}.data_tbl_upd 
 select 
 t.data_tblid,
 t.dbid,
@@ -14,23 +14,23 @@ t.del_dt,
 t.incr_or_full,
 coalesce(u.data_tbl_uuid, t.data_tbl_uuid),
 coalesce(t.data_srcid, s.data_srcid)
-from tmpdb.data_tbl t 
+from ${TMP_DB_NAME}.data_tbl t 
 left join ${CLEANSE_DB}.data_src s
 	on substr(t.data_tbl_phys_nm, 3, 4) = s.Data_Src_Dep_Cd
 	and substr(t.data_tbl_phys_nm, 8, 3) = s.Data_Src_Dep_Sys_Cd
-left join tmpdb.data_tbl_uuid u
+left join ${TMP_DB_NAME}.data_tbl_uuid u
 	on t.data_tblid = u.data_tblid
-left join (select distinct data_tblid from tmpdb.data_fld where upd_dt = current_date) f
+left join (select distinct data_tblid from ${TMP_DB_NAME}.data_fld where upd_dt = current_date) f
 	on  t.data_tblid = f.data_tblid;
 
 
-drop table if exists tmpdb.dp;
-create table tmpdb.dp like ${CLEANSE_DB}.dp;
+drop table if exists ${TMP_DB_NAME}.dp;
+create table ${TMP_DB_NAME}.dp like ${CLEANSE_DB}.dp;
 
-insert into tmpdb.dp (dpid) select max(dpid) from ${CLEANSE_DB}.dp;
-delete from tmpdb.dp;
+insert into ${TMP_DB_NAME}.dp (dpid) select max(dpid) from ${CLEANSE_DB}.dp;
+delete from ${TMP_DB_NAME}.dp;
 
-insert into tmpdb.dp (data_tblid, dp_dt, dp_path, rec_qty)
+insert into ${TMP_DB_NAME}.dp (data_tblid, dp_dt, dp_path, rec_qty)
 SELECT t1.data_tblid, p.part_date, p.part_name, p.numRows
 FROM
 (
@@ -63,7 +63,7 @@ left join (select * from ${METASTORE_DB}.partition_params where param_key = 'num
 on p.part_id = pp.part_id
 ) p, 
 (SELECT d.db_phys_nm, t.data_tbl_phys_nm, t.data_tblid
-from tmpdb.data_tbl t, ${CLEANSE_DB}.db d
+from ${TMP_DB_NAME}.data_tbl t, ${CLEANSE_DB}.db d
 where t.dbid = d.dbid
 ) t1
 where p.db_name = t1.db_phys_nm
@@ -79,7 +79,7 @@ and dbid in (
 	where d.partid = p.partid
 	and p.tnmtid = ${TENANT_ID}
 );
-insert into ${CLEANSE_DB}.data_tbl select * from tmpdb.data_tbl_upd;
+insert into ${CLEANSE_DB}.data_tbl select * from ${TMP_DB_NAME}.data_tbl_upd;
 
 delete from ${CLEANSE_DB}.data_fld 
 where 
@@ -91,7 +91,7 @@ and data_tblid in (
 	and d.partid = p.partid
 	and p.tnmtid = ${TENANT_ID}
 );
-insert into ${CLEANSE_DB}.data_fld select * from tmpdb.data_fld;
+insert into ${CLEANSE_DB}.data_fld select * from ${TMP_DB_NAME}.data_fld;
 
 delete from ${CLEANSE_DB}.dp
 where data_tblid in (
@@ -101,6 +101,6 @@ where data_tblid in (
 	and d.partid = p.partid
 	and p.tnmtid = ${TENANT_ID}
 );
-insert into ${CLEANSE_DB}.dp select * from tmpdb.dp;
+insert into ${CLEANSE_DB}.dp select * from ${TMP_DB_NAME}.dp;
 
 
