@@ -13,7 +13,8 @@ case when f.data_tblid is not null then current_date else t.upd_dt end,
 t.del_dt,
 t.incr_or_full,
 coalesce(u.data_tbl_uuid, t.data_tbl_uuid),
-coalesce(t.data_srcid, s.data_srcid)
+coalesce(t.data_srcid, s.data_srcid),
+t.data_entity_id
 from ${TMP_DB_NAME}.data_tbl t 
 left join ${CLEANSE_DB}.data_src s
 	on substr(t.data_tbl_phys_nm, 3, 4) = s.Data_Src_Dep_Cd
@@ -36,13 +37,13 @@ FROM
 (
 select t1.tbl_id, t1.tbl_name, t2.name as db_name, p.PART_NAME, pp.param_value as numRows,
 case when INSTR(p.part_name, 'data_dt=') = 1 
-	THEN substr(p.part_name, 9)
+	THEN substr(p.part_name, 9, 10)
 	else 
 		replace(
 			replace(
 				replace(
 					replace(p.part_name, 
-									'access_partition_year=', ''),
+						'access_partition_year=', ''),
 					'access_partition_month=', ''),
 				'access_partition_day=', ''),
 			'/', '-')

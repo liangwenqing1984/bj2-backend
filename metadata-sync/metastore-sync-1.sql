@@ -41,7 +41,8 @@ select data_tblid,
             (case when tbl_name is null then current_date else null end) as del_dt,
             incr_or_full,
             data_tbl_uuid,
-            data_srcid
+            data_srcid,
+            data_entity_id
 from 
 (select *
 from ${TMP_DB_NAME}.cts left join ${TMP_DB_NAME}.hts
