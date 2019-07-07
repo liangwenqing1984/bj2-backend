@@ -13,8 +13,7 @@ case when f.data_tblid is not null then current_date else t.upd_dt end,
 t.del_dt,
 t.incr_or_full,
 coalesce(u.data_tbl_uuid, t.data_tbl_uuid),
-coalesce(t.data_srcid, s.data_srcid),
-t.data_entity_id
+coalesce(t.data_srcid, s.data_srcid)
 from ${TMP_DB_NAME}.data_tbl t 
 left join ${CLEANSE_DB}.data_src s
 	on substr(t.data_tbl_phys_nm, 3, 4) = s.Data_Src_Dep_Cd
@@ -54,7 +53,7 @@ from (select * from ${METASTORE_DB}.tbls where ${METASTORE_TABLE_FILTER}) t1 joi
 	where name = db_phys_nm
 	and db.partid = p.partid
     and db.db_usageid = u.db_usageid
-    and u.db_usage_cd in ('02', '03', '06')
+    and u.db_usage_cd in ${DB_USAGE_LIST}
 	and p.tnmtid = ${TENANT_ID}
 ) t2
 on t1.DB_ID = t2.db_id

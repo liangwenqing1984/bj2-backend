@@ -17,7 +17,7 @@ create table ${TMP_DB_NAME}.hts
                     where name = db_phys_nm
                     and p.partid = db.partid
                     and db.db_usageid = u.db_usageid
-                    and u.db_usage_cd in ('02', '03', '06')
+                    and u.db_usage_cd in ${DB_USAGE_LIST}
                     and p.tnmtid = ${TENANT_ID}
                 ) t2
             on t1.DB_ID = t2.db_id
@@ -41,8 +41,7 @@ select data_tblid,
             (case when tbl_name is null then current_date else null end) as del_dt,
             incr_or_full,
             data_tbl_uuid,
-            data_srcid,
-            data_entity_id
+            data_srcid
 from 
 (select *
 from ${TMP_DB_NAME}.cts left join ${TMP_DB_NAME}.hts
@@ -110,7 +109,7 @@ create table ${TMP_DB_NAME}.hcs
                     where name = db_phys_nm
                     and p.partid = db.partid
                     and db.db_usageid = u.db_usageid
-                    and u.db_usage_cd in ('02', '03', '06')
+                    and u.db_usage_cd in ${DB_USAGE_LIST}
                     and p.tnmtid = ${TENANT_ID}
                 ) d
             where d.DB_ID = t.db_id
