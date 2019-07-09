@@ -494,7 +494,7 @@ def get_hive_process_col_info(logger,conn,tbid,ifpro):
                 " left join data_fld t2 on t1.data_tblid =  t2.data_tblid"\
                 " inner join {} t3 on t2.fldid = t3.fldid"\
                 " left join data_wash_cmpu t4 on t3.data_wash_cmpuid = t4.data_wash_cmpuid"\
-                " where t1.data_tblid = {}".format(wash_proj_tb,tbid)
+                " where t1.data_tblid = {} and t4.Data_Wash_Cmpu_Type='0'  ".format(wash_proj_tb,tbid)
         logger.info(sql)
         cursor.execute(sql)
         result = cursor.fetchall()
