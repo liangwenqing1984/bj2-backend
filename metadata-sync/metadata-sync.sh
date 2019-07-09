@@ -90,14 +90,13 @@ END
 echo "Update Automation job status ..."
 $CUR_DIR/update-etl-jobs.sh $TENANT_ID
 
-echo "Updating Metadata-Sync job status ..."
-CUR_TIME=`date "+%Y-%m-%d %H:%M:%S"`
-mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS << END
-use $CLEANSE_DB_NAME;
-
-update data_proc_job set rfrsh_tm = "$CUR_TIME", job_stus='DONE' where jobid = $JOB_ID;
-
-END
+if [ $JOB_ID -ne 0 ]; then
+	echo "Updating Metadata-Sync job status ..."
+	CUR_TIME=`date "+%Y-%m-%d %H:%M:%S"`
+	mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS -D $CLEANSE_DB_NAME -e "
+		update data_proc_job set rfrsh_tm = '$CUR_TIME', job_stus='DONE' where jobid = $JOB_ID;
+	"
+fi
 
 mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS << END
 use $CLEANSE_DB_NAME;
