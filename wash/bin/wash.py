@@ -83,27 +83,40 @@ def get_logger(logfile):
     return logger
 
 #检查所清洗表分区是否存在或表分区记录数是否为0
-def chk_orig_tb(logger,hive_conn,conn,tbid,data_dt):
-    records = get_orig_hive_tb_records(logger,hive_conn,conn,tbid,data_dt)
+def chk_orig_tb(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt):
+    records = get_orig_hive_tb_records(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt)
     if(records == None):
         logger.error("表 %s 分区 %s 分区不存在"%(tbid,data_dt))
-        raise Exception("[表 %s 分区 %s 分区不存在]"%(tbid,data_dt))
-    elif(records == '0'):
+        # raise Exception("[表 %s 分区 %s 分区不存在]"%(tbid,data_dt))
+        return 0
+    elif(records == 0):
         logger.error("表 %s 分区 %s 分区记录数为0"%(tbid,data_dt))
-        raise Exception("[表 %s 分区 %s 分区记录数为0]"%(tbid,data_dt))
+        # raise Exception("[表 %s 分区 %s 分区记录数为0]"%(tbid,data_dt))
+        return 0
     else:
         logger.info("表 %s 分区 %s 分区记录数为 %s "%(tbid,data_dt,records))
     return int(records)
 
+
 #生成创建各个区的表的SQL
 def gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt):
     try:
+        columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
+        pk_columns_cnt = len(pk_columns)
         with open(hqlfile,"w") as f:
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'04',''))
             if(ifpro == '0'):
-                f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls') )
+                if(pk_columns_cnt == 0):
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls') )
+                else:
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls_tmp') )
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls') )
             elif(ifpro == '1'):
-                f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'03','') )
+                if(pk_columns_cnt == 0):
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'03','') )
+                else:
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_cls_tmp') )
+                    f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'03','') )
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_rowid'))
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_deal_dump'))
             f.write(crt_tb_by_tbid(logger,conn,jobid,tbid,ifpro,data_dt,'05','_deal_column'))
@@ -119,14 +132,26 @@ def gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pe
     try:
         mates = get_casewhen_mate(logger,conn, tbid,ifpro)
         mates_len = len(mates)
+        columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
+        pk_columns_cnt = len(pk_columns)
         with open(hqlfile,"a") as f:
             f.write(get_rowid_tbl_insql(logger,hive_conn,conn, jobid,tbid,ifpro,data_dt,records,pect))
             if mates_len== 0:
-                f.write(get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                if(pk_columns_cnt == 0):
+                    f.write(get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                else:
+                    f.write(get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                    f.write(get_pks_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
             else:
-                f.write(get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
-                f.write(get_columns_deal_sql_once(logger,config, conn,jobid,tbid,ifpro, data_dt))
-                f.write(get_pk_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                if(pk_columns_cnt == 0):
+                    f.write(get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                    f.write(get_columns_deal_sql_once(logger,config, conn,jobid,tbid,ifpro, data_dt))
+                    f.write(get_all_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                else:
+                    f.write(get_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                    f.write(get_columns_deal_sql_once(logger,config, conn,jobid,tbid,ifpro, data_dt))
+                    f.write(get_all_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
+                    f.write(get_pks_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt))
     except Exception as err:
         logger.error("生成创建各个步骤处理SQL失败 %s"  %err)
         raise err
@@ -176,20 +201,13 @@ def exp_hive_to_msql(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt):
 #正式处理程序
 def process(hqlfile,logger,conf,hive_conn,conn,tbid,mode,ifpro,pect,data_dt):
     try:
-        records = chk_orig_tb(logger,hive_conn,conn,tbid,data_dt)
+        records = chk_orig_tb(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt)
+        if(records == 0):
+            update_job_status(logger,conn,jobid,'DONE',data_dt,data_dt,ifpro,0,0,0,0)
+            exit(0)
         hiveserver = host=conf.get('hive', 'host')
-        ifexist = check_cls_isu_tb_exist(logger,conn,jobid,tbid)
-        if(ifexist == '1'):
-            if(ifpro =='1'):
-                with open(hqlfile,'w') as f:
-                    f.write("")
-                gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect)
-            else:
-                gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt)
-                gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect)
-        else:
-                gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt)
-                gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect)
+        gen_tbs_sql(hqlfile,logger,conn,tbid,ifpro,data_dt)
+        gen_ins_sql(hqlfile,logger,conf,hive_conn,conn,tbid,ifpro,data_dt,records,pect)
         beeline_cmd = "beeline -u jdbc:hive2://"+hiveserver+":10000/ -n hive -f " +hqlfile
         logger.info("beeline_cmd====\n" + beeline_cmd)
         rtcode = os.system(beeline_cmd)
@@ -199,6 +217,8 @@ def process(hqlfile,logger,conf,hive_conn,conn,tbid,mode,ifpro,pect,data_dt):
         insert_col_static(logger,config,hive_conn,conn,jobid,tbid,ifpro,data_dt)
         tot,dump,pkdump,allpass = get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt)
         update_job_status(logger,conn,jobid,'DONE',data_dt,data_dt,ifpro,tot,dump,pkdump,allpass)
+        if ifpro == '1':
+            update_data_tbl_mark_idx(logger,conn,tbid)
     except Exception as err:
         raise err
 
@@ -233,7 +253,7 @@ if __name__ == '__main__':
         if ifpro=='1':
             pect = 100
         process(hqlfile,logger,config,hive_conn,conn,tbid,mode,ifpro,pect,data_dt)
-
+        # get_pks_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt)
     except Exception as err:
         update_job_status(logger,conn,jobid,'FAILED',data_dt,data_dt,ifpro,0,0,0,0)
         warning_message = traceback.format_exc()
@@ -291,7 +311,7 @@ if __name__ == '__main__':
     # get_rowid_tbl_insql(conn,1001, '2019-05-03')
     # get_dupl_rec_sql(conn,1001, '2019-05-03')
     # get_columns_deal_sql_once(config,conn,1001,'2019-05-03')
-    # get_pk_dupl_rec_sql(conn,1001, '2019-05-03')
+    # get_all_dupl_rec_sql(conn,1001, '2019-05-03')
     #----------------------------------------------------
     # get_dbs_and_usage_by_tnmtid(conn,1001)
     # get_dbtbmaps_by_tbid(conn, 1001)
@@ -323,7 +343,7 @@ if __name__ == '__main__':
     # get_rowid_tbl_insql(logger,conn, jobid,tbid,'0',data_dt,pect=100)
     # get_dupl_rec_sql(logger,conn,jobid,tbid,'0',data_dt)
     # get_columns_deal_sql_once(logger,config, conn,jobid,tbid,'1', data_dt)
-    # get_pk_dupl_rec_sql(logger,conn,jobid,tbid,'1',data_dt)
+    # get_all_dupl_rec_sql(logger,conn,jobid,tbid,'1',data_dt)
     # -----------------------------------------------------------------
         # process(hqlfile,logger,config,conn,tbid,mode,ifpro,pect,data_dt)
         # a,b,c = get_hive_process_tab_info(logger,config,hive_conn,conn,jobid,tbid,ifpro,data_dt)

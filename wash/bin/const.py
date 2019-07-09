@@ -15,6 +15,7 @@ CrtDevDir = "../sql/create/dev/"
 CrtProDir = "../sql/create/pro/"
 RowidStr = "\t\trowidlwq string,\n"
 TagsStr = "\t\ttagslwq string )\n"
+CommentStr = "\t\tcomment '"
 
 InsDevDir = "../sql/insert/dev/"
 InsProDir = "../sql/insert/pro/"
@@ -22,3 +23,5 @@ AsTagsStr = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tas tags\n"
 
 InsOvrStr = "insert overwrite table "
 InsPartDtStr = " partition(data_dt='"
+
+MaskWorkDir = "/home/etl/ETLAuto/dqc/"

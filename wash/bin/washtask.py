@@ -44,7 +44,8 @@ def excute_func(conn,ctlfile):
             logging.info(cmd)
             rtcode = os.system(cmd)
         else:
-            cmd = "mask.sh " + str(jobid) + " " + str(tbid) + " 1 1 100 "  + data_dt
+            # os.chdir(MASK_DIR)
+            cmd = "python " + MASK_DIR + "mask_executor.py " + str(jobid) + " " + str(tbid) + " "  + data_dt
             logging.info(cmd)
             rtcode = os.system(cmd)
         if(rtcode != 0):
@@ -65,14 +66,14 @@ def get_jobinfo(ctlfile):
     if wash_or_mask == 'WASH':
         wash_or_mask_flag = '1'
     elif wash_or_mask == 'MASK':
-        wash_or_mask_flag = '2'
+        wash_or_mask_flag = '3'
     else:
         logging.error("作业非清洗或脱敏作业,wash_or_mask=%s"%wash_or_mask)
         raise Exception("作业非清洗或脱敏作业,wash_or_mask=%s"%wash_or_mask)
     logging.info("etl_syscd=%s,tbname=%s,data_dt=%s"%(etl_syscd,tbname,data_dt))
     return etl_syscd,tbname,wash_or_mask_flag,data_dt
 
-# 根据系统号和作业名称从清洗库中查找表id
+# 根据系统号和作业名称从原始库中查找表id
 def get_tbid_by_etljob(conn,etl_syscd,tbname):
     try:
         cursor = conn.cursor()
@@ -97,21 +98,22 @@ def get_tbid_by_etljob(conn,etl_syscd,tbname):
     finally:
         cursor.close()
 
-#根据表id和作业类型查找已发布清洗作业id和作业类型
+#根据表id和作业类型查找已发布清洗作业id
 def get_jobid_by_tbid_jobcat(conn,tbid,jobcat):
     try:
         cursor = conn.cursor()
         sql = "select jobid from prd_data_proc_job where data_tblid = '{}' and job_type='{}';".format(tbid,jobcat)
+        logging.info("get_jobid_by_tbid_jobcat.sql=====\n"+sql)
         cursor.execute(sql)
         result = cursor.fetchone()
         if(result == None or len(result)==0):
-            logging.error("根据表id:%s 和作业类型未从清洗库找到相应的作业id %s" %(tbid,jobcat))
+            logging.error("根据表id:%s 和作业类型 %s 未从清洗库找到相应的作业id " %(tbid,jobcat))
             raise Exception()
         else:
             jobid = result.get("jobid")
             return jobid
     except Exception as err:
-        logging.error("根据表id:%s 和作业类型未从清洗库找到相应的作业id %s" %(tbid,jobcat))
+        logging.error("根据表id:%s 和作业类型 %s 未从清洗库找到相应的作业id" %(tbid,jobcat))
         raise err
     finally:
         cursor.close()
@@ -124,6 +126,7 @@ if __name__ == '__main__':
                     datefmt='%a, %d %b %Y %H:%M:%S')
     logging.info("begin to run washtask.py ")
     ETL_HOME = "/home/etl/ETLAuto"
+    MASK_DIR = os.path.join(ETL_HOME,"dqc/")
     if len(sys.argv) == 2:
         try:
             os.chdir(os.path.join(ETL_HOME,"wash/data_wash/bin"))

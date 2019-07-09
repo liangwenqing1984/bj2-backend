@@ -26,6 +26,30 @@ def get_tb_phys_nm_by_tbid(logger,conn,tbid):
         cursor.close()
     return data_tbl_phys_nm
 
+
+# 根据表id查找表中文名称
+def get_tb_cn_nm_by_tbid(logger,conn,tbid):
+    try:
+        phys_nm = get_tb_phys_nm_by_tbid(logger,conn,tbid)
+        cursor = conn.cursor();
+        sql = "select COALESCE(data_tbl_cn_nm,'') as data_tbl_cn_nm from data_tbl where data_tblid = {} ".format(tbid)
+        logger.info(sql)
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        data_tbl_cn_nm = ""
+        if result == None or len(result)==0:
+            logger.warn("根据表id: %s 未查找到表中文名称" %tbid)
+        else:
+            data_tbl_cn_nm = result.get("data_tbl_cn_nm")
+        cn_phys_nm = data_tbl_cn_nm+"["+phys_nm+"]"
+        logger.info("cn_phys_nm====\n"+cn_phys_nm)
+    except Exception as err:
+        logger.error("根据表id: %s 查找表中文名称失败%s" %(tbid,err))
+        raise err
+    finally:
+        cursor.close()
+    return cn_phys_nm
+
 # 根据表id查找租户id
 def get_tnmtid_by_tbid(logger,conn, tbid):
     try:
@@ -138,7 +162,7 @@ def get_crt_columns_by_tbid(logger,conn, tbid):
             if(Fld_Cn_Nm == None):
                 crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment ''"
             else:
-                crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment '" + Fld_Cn_Nm + "'"
+                crt_column = Fld_Phys_Nm + " " + Fld_Data_Type + " comment '" + Fld_Cn_Nm.strip('\n').strip('\r').replace(';','') + "'"
             crt_columns.append(crt_column)
         crt_columns_str = list_to_str(crt_columns)
         logger.info("crt_columns_str====\n" + str(crt_columns_str))
@@ -151,7 +175,7 @@ def get_crt_columns_by_tbid(logger,conn, tbid):
 
 
 # 根据传入日期获取分区信息，组装where分区条件
-def get_whpart_by_date(logger,conn, tbid, txdate):
+def get_whpart_by_date(logger,conn,jobid,tbid,ifpro,txdate):
     try:
         cursor = conn.cursor()
         sql = "select dp_path from dp t where t.data_tblid= {} and dp_dt= '{}';".format(tbid,txdate)
@@ -160,7 +184,9 @@ def get_whpart_by_date(logger,conn, tbid, txdate):
         result = cursor.fetchone()
         if result == None or len(result)==0:
             logger.error("根据表 %s 传入日期 %s 未获取分区信息"%(tbid,txdate))
-            raise Exception("[根据表 %s 传入日期 %s 未获取分区信息]"%(tbid,txdate))
+            update_job_status(logger,conn,jobid,'DONE',txdate,txdate,ifpro,0,0,0,0)
+            exit(0)
+            # raise Exception("[根据表 %s 传入日期 %s 未获取分区信息]"%(tbid,txdate))
         where_part_str = result.get("dp_path").replace("/", "' and ").replace("=","='")+"'"
         logger.info("where_part_str====\n" + where_part_str)
     except Exception as err:
@@ -201,7 +227,7 @@ def get_casewhen_mate(logger,conn, tbid,ifpro):
               "left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid " \
               "left join {} t3 on t2.Fldid = t3.Fldid " \
               "left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid " \
-              "where t1.Data_Tblid = {} and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null " \
+              "where t1.Data_Tblid = {} and t2.Del_Dt is null and t4.Data_Wash_Cmpu_Cd is not null and t4.Data_Wash_Cmpu_Type='0'  " \
               "order by t2.Fld_Ord asc ,exct_ord asc".format(wash_proj_tb,tbid)
         logger.info(sql)
         cursor.execute(sql)
@@ -307,7 +333,7 @@ def get_all_columns_cmpus_pkg(logger,conn, tbid,ifpro):
               "left join data_fld t2 on t1.Data_Tblid = t2.Data_Tblid " \
               "left join {} t3 on t2.Fldid = t3.Fldid " \
               "left join data_wash_cmpu t4 on t3.data_wash_cmpuid =t4.data_wash_cmpuid " \
-              "where t1.Data_Tblid = {} and t2.Del_Dt is null  " \
+              "where t1.Data_Tblid = {} and t2.Del_Dt is null and (t4.Data_Wash_Cmpu_Type='0' or t4.Data_Wash_Cmpu_Type is null) " \
               "order by t2.Fld_Ord asc ,exct_ord asc".format(wash_proj_tb,tbid)
         logger.info(sql)
         cursor.execute(sql)
@@ -418,7 +444,7 @@ def check_cls_isu_tb_exist(logger,conn,jobid,tbid):
 def get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_dt):
     try:
         dbtbmaps = get_dbtbmaps_by_tbid(logger,conn,tbid)
-        wherepart = get_whpart_by_date(logger,conn,tbid,data_dt)
+        wherepart = get_whpart_by_date(logger,conn,jobid,tbid,ifpro,data_dt)
         hcursor = hive_conn.cursor()
         tmpdbtb = dbtbmaps.get("05")+"_rowid"
         isudbtb = dbtbmaps.get("04")
@@ -426,8 +452,8 @@ def get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_d
         if(ifpro == '1'):
            hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty),sum(All_Pass_Rec_Qty) from ( "\
                     "select count(1) as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty from  {}  where data_dt = '{}' union "\
-                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty  from  {}  where data_dt='{}' and  isu_type='1' union "\
-                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty   from  {}  where data_dt='{}' and  isu_type='3' union "\
+                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty  from  {}  where data_dt='{}' and  isu_type in ('1','3') union "\
+                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty,0 as All_Pass_Rec_Qty   from  {}  where data_dt='{}' and  isu_type='4' union "\
                     "select 0 as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty,count(1) as All_Pass_Rec_Qty from  {}  where data_dt = '{}'"\
                     ") t".format(tmpdbtb,data_dt,isudbtb,data_dt,isudbtb,data_dt,clsdbtb,data_dt)
         else:
@@ -435,8 +461,8 @@ def get_hive_process_tab_info(logger,conf,hive_conn,conn,jobid,tbid,ifpro,data_d
             isudbtb = isudbtb+"_"+jobid
             hql = "select sum(Proc_Rec_Total_Qty),sum(All_Dupl_Rec_Qty),sum(Pk_Dupl_Rec_Qty),0 from ( "\
                     "select count(1) as Proc_Rec_Total_Qty ,0 as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  union "\
-                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  where  isu_type='1' union "\
-                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty  from  {}  where  isu_type='3' "\
+                    "select 0 as Proc_Rec_Total_Qty ,count(1) as All_Dupl_Rec_Qty,0 as Pk_Dupl_Rec_Qty from  {}  where  isu_type in ('1','3') union "\
+                    "select 0 as Proc_Rec_Total_Qty,0 as All_Dupl_Rec_Qty,count(1) as Pk_Dupl_Rec_Qty  from  {}  where  isu_type='4' "\
                     ") t".format(tmpdbtb,isudbtb,isudbtb)
         logger.info("hql====\n"+hql)
         hcursor.execute(hql)
@@ -624,19 +650,82 @@ def create_mysql_isu_tab(logger,conn,jobid,tbid):
     return crt_sql
 
 #获取hive原始区表数据记录总数
-def get_orig_hive_tb_records(logger,hive_conn,conn,tbid,data_dt):
+def get_orig_hive_tb_records(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt):
     try:
         hive_cursor = hive_conn.cursor()
         dbtbmaps = get_dbtbmaps_by_tbid(logger,conn,tbid)
-        wherepart = get_whpart_by_date(logger,conn,tbid,data_dt)
+        wherepart = get_whpart_by_date(logger,conn,jobid,tbid,ifpro,data_dt)
         orig_tbnm = dbtbmaps.get("02")
         hql = "select count(1) from " + orig_tbnm + " where " + wherepart
+        logger.info("get_orig_hive_tb_records.hql====\n"+hql)
         hive_cursor.execute(hql)
-        records = hive_cursor.fetchone()[0]
+        records = int(hive_cursor.fetchone()[0])
+        if(records == 0):
+            logger.warn("表id %s 分区 %s 记录数为0，程序退出!"%{tbid,data_dt})
     except Exception as err:
         logger.error("获取表 %s 分区 %s 记录总数失败"%(tbid,data_dt))
         raise err
     return records
+
+#检查原始区表元数据是否在当前日期发生了变化
+def check_if_tbl_meta_chged(logger,conn,tbid):
+    try:
+        cursor = conn.cursor()
+        cur_date = str(get_cur_date())
+        date_sql =   "select upd_dt from data_tbl where Data_Tblid = '{}'".format(tbid)
+        logger.info(date_sql)
+        cursor.execute(date_sql)
+        result = cursor.fetchone()
+        upd_dt = str(result.get("upd_dt"))
+        if(upd_dt == None or len(upd_dt) == 0 or cur_date != upd_dt):
+            logger.info("表 %s 元数据未发生变化!"%tbid)
+            return '0'
+        else:
+            logger.warn("表 %s 元数据发生变化!"%tbid)
+            return '1'
+    except Exception as err:
+        logger.error("检查原始区表元数据是否在当前日期发生了变化失败!")
+        raise err
+    finally:
+        cursor.close()
+
+#根据租户id和已清洗标签code获取标签id
+def get_labelid_by_tnmtid_and_labelcd(logger,conn,tnmtid,labelcd='__L000001__'):
+    try:
+        cursor = conn.cursor()
+        sql = "select labelid from label where tnmtid='{}' and label_cd='{}'".format(tnmtid,labelcd)
+        logger.info("get_labelid_by_tnmtid_and_labelcd:sql====\n"+sql)
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        if(result == None or len(result)==0):
+            logger.error("根据租户id:%s 和已清洗标签code: %s 未找到labelid"%{tnmtid,labelcd})
+            raise err
+        else:
+            labelid = result.get("labelid")
+        return labelid
+    except Exception as err:
+        logger.error("根据租户id:%s 和已清洗标签code: %s 查找labelid失败"%{tnmtid,labelcd})
+        raise err
+    finally:
+        cursor.close()
+
+
+#更新表级标签表
+def update_data_tbl_mark_idx(logger,conn,tbid):
+    try:
+        cursor = conn.cursor()
+        tnmtid = get_tnmtid_by_tbid(logger,conn,tbid)
+        labelid = get_labelid_by_tnmtid_and_labelcd(logger,conn,tnmtid,'__L000001__')
+        sql = "replace into data_tbl_mark_idx set data_tblid='{}',labelid='{}',mark_idx_type='{}'".format(tbid,labelid,'0')
+        logger.info("update_data_tbl_mark_idx.sql====\n"+sql)
+        cursor.execute(sql)
+        conn.commit()
+    except Exception as err:
+        logger.error("更新表级标签表失败")
+        raise err
+    finally:
+        cursor.close()
+
 
 # 获取要清洗的表清单
 # def get_wash_tables(conn):

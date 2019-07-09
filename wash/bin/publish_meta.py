@@ -3,6 +3,7 @@
 import pymysql
 import sys
 import os
+from get_metadata import *
 
 
 
@@ -50,11 +51,15 @@ def update_etl_job_dependency(logger,etl_conn,jobcat,etl_system,etl_job,wash_sta
 
 
 #更新 etl_job_stream 表
-def update_etl_job_stream(logger,etl_conn,etl_system,etl_job,dependency_system,dependency_job):
+def update_etl_job_stream(logger,etl_conn,jobcat,etl_system,etl_job,wash_start_system,wash_start_job,wash_end_system,wash_end_job):
     try:
         cursor = etl_conn.cursor()
-        etl_job_stream_sql =   "replace into etl_job_stream(etl_system,etl_job,stream_system,stream_job,enable) values( "\
-                "'{}','{}','{}','{}','{}')".format(dependency_system,dependency_job,etl_system,etl_job,'1')
+        if(jobcat == '1'):
+            etl_job_stream_sql =   "replace into etl_job_stream(etl_system,etl_job,stream_system,stream_job,enable) values( "\
+                    "'{}','{}','{}','{}','{}')".format(wash_start_system,wash_start_job,etl_system,etl_job,'1')
+        elif(jobcat == '3'):
+            etl_job_stream_sql =   "replace into etl_job_stream(etl_system,etl_job,stream_system,stream_job,enable) values( "\
+                    "'{}','{}','{}','{}','{}')".format(wash_end_system,wash_end_job,etl_system,etl_job,'1')
         logger.info("etl_job_stream_sql====\n" + etl_job_stream_sql)
         cursor.execute(etl_job_stream_sql)
         # etl_conn.commit()
@@ -118,6 +123,7 @@ def crt_link(logger,conf,etl_conn,etl_system,etl_job,scriptid,scriptfile):
         srcfile  = os.path.join(etl_home,"app",src_template_file)
         logger.info("srcfile====\n" + srcfile)
         linkdir = os.path.join(etl_home,"APP",etl_system,etl_job,"bin")
+        chmoddir = os.path.join(etl_home,"APP",etl_system)
         logger.info("linkdir====\n" + linkdir)
         isExist = os.path.exists(linkdir)
         if not isExist:
@@ -132,6 +138,11 @@ def crt_link(logger,conf,etl_conn,etl_system,etl_job,scriptid,scriptfile):
             if rtcode != 0:
                 logger.error("创建软链接失败,linkfile=%s"%linkfile)
                 raise Exception("创建软链接失败,linkfile=%s"%linkfile)
+        chmod_cmd = "chmod -R 775 " + chmoddir
+        chmod_rtcode = os.system(chmod_cmd)
+        if chmod_rtcode !=0:
+            logger.error("修改目录权限失败,chmoddir=%s"%chmoddir)
+            raise Exception("修改目录权限失败,chmoddir=%s"%chmoddir)
     except Exception as err:
         logger.error("创建软链接 %s 失败 "%linkfile)
         raise err
@@ -167,22 +178,25 @@ def get_etl_system_by_tbid(logger,conn,tbid):
 # 根据表id查找表中文名称
 def get_tb_cn_nm_by_tbid(logger,conn,tbid):
     try:
+        phys_nm = get_tb_phys_nm_by_tbid(logger,conn,tbid)
         cursor = conn.cursor();
-        sql = "select data_tbl_cn_nm from data_tbl where data_tblid = {} ".format(tbid)
+        sql = "select COALESCE(data_tbl_cn_nm,'') as data_tbl_cn_nm from data_tbl where data_tblid = {} ".format(tbid)
         logger.info(sql)
         cursor.execute(sql)
         result = cursor.fetchone()
+        data_tbl_cn_nm = ""
         if result == None or len(result)==0:
-            logger.error("根据表id: %s 未查找到表中文名称" %tbid)
-            raise Exception("[根据表id: %s 未查找到表中文名称]" %tbid)
-        data_tbl_cn_nm = result.get("data_tbl_cn_nm")
-        logger.info("data_tbl_cn_nm====\n"+data_tbl_cn_nm)
+            logger.warn("根据表id: %s 未查找到表中文名称" %tbid)
+        else:
+            data_tbl_cn_nm = result.get("data_tbl_cn_nm")
+        cn_phys_nm = data_tbl_cn_nm+"["+phys_nm+"]"
+        logger.info("cn_phys_nm====\n"+cn_phys_nm)
     except Exception as err:
         logger.error("根据表id: %s 查找表中文名称失败%s" %(tbid,err))
         raise err
     finally:
         cursor.close()
-    return data_tbl_cn_nm
+    return cn_phys_nm
 
 def get_script_template_file_by_script_id(logger,etl_conn,script_id):
     try:
@@ -210,7 +224,7 @@ def create_etl_job(logger,conf,etl_conn,jobcat,etl_server,scriptid,scriptfile,et
         create_trigger_job(logger,conf,etl_conn,etl_server,etl_system)
         update_etl_job(logger,etl_conn,etl_server,scriptfile,etl_system,etl_job,description,frequency,jobtype)
         update_etl_job_dependency(logger,etl_conn,jobcat,etl_system,etl_job,wash_start_system,wash_start_job,wash_end_system,wash_end_job)
-        # update_etl_job_stream(logger,etl_conn,etl_system,etl_job,dependency_system,dependency_job)
+        update_etl_job_stream(logger,etl_conn,jobcat,etl_system,etl_job,wash_start_system,wash_start_job,wash_end_system,wash_end_job)
         update_etl_job_step(logger,etl_conn,etl_system,etl_job,scriptid,scriptfile)
         update_etl_job_source(logger,etl_conn,etl_system,etl_job)
         update_etl_job_timewindow(logger,etl_conn,etl_system,etl_job)
@@ -388,6 +402,7 @@ def crt_trigger_link(logger,conf,etl_conn,etl_system,start_end_flag):
         srcfile  = os.path.join(etl_home,"app",src_template_file)
         logger.info("srcfile====\n" + srcfile)
         linkdir = os.path.join(etl_home,"APP",etl_system,etl_job,"bin")
+        chmoddir = os.path.join(etl_home,"APP",etl_system)
         logger.info("linkdir====\n" + linkdir)
         isExist = os.path.exists(linkdir)
         if not isExist:
@@ -402,6 +417,11 @@ def crt_trigger_link(logger,conf,etl_conn,etl_system,start_end_flag):
             if rtcode != 0:
                 logger.error("创建软链接失败,linkfile=%s"%linkfile)
                 raise Exception("创建软链接失败,linkfile=%s"%linkfile)
+        chmod_cmd = "chmod -R 775 " + chmoddir
+        chmod_rtcode = os.system(chmod_cmd)
+        if chmod_rtcode !=0:
+            logger.error("修改目录权限失败,chmoddir=%s"%chmoddir)
+            raise Exception("修改目录权限失败,chmoddir=%s"%chmoddir)
     except Exception as err:
         logger.error("创建软链接 %s 失败 "%linkfile)
         raise err

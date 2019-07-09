@@ -17,6 +17,6 @@ if [ $? -ne 0 ];then
     exit 1
 else
     CURR_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-    echo CURR_TIME "作业发布或删除成功"
+    echo $CURR_TIME "作业发布或删除成功"
     exit 0
 fi

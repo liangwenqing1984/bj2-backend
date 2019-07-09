@@ -142,39 +142,36 @@ def get_columns_deal_sql_once(logger,conf, conn,jobid,tbid,ifpro, data_dt):
         write_sql_to_file(ins_sql_file, ins_sql)
         logger.info(ins_sql)
     except Exception as err:
-        logger.error("组装字段清洗插入SQL语句失败%s" %err)
+        logger.error("组装按rowid所有字段去重插入SQL语句失败%s" %err)
         raise err
         exit(1)
     return ins_sql
 
-# 再次组装全字段去重SQL
+# 组装主键去重SQL
 def get_all_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
     try:
         datadt = chg_date_format(data_dt)
-        jobinfo = str(jobid)+ "_" + str(tbid) + "_"+ str(ifpro)+"_"+str(datadt)+"_deal_pks"
+        jobinfo = str(jobid)+ "_" + str(tbid) + "_"+ str(ifpro)+"_"+str(datadt)+"_deal_dump2"
         logger.info(jobinfo)
         columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
-        pk_columns_cnt = len(pk_columns)
         hive_sql_str_columns = list_to_str2(columns)
         dbtbmaps = get_dbtbmaps_by_tbid(logger,conn, tbid)
         rowid_dbtb_name = dbtbmaps.get("05") + "_rowid"
-        if(pk_columns_cnt == 0):
-            cls_dbtb_name = dbtbmaps.get("03")
-        else:
-            cls_dbtb_name = dbtbmaps.get("05")+"_cls_tmp"
+        cls_dbtb_name = dbtbmaps.get("03")
         isu_dbtb_name = dbtbmaps.get("04")
         tmp_dbtb_name = dbtbmaps.get("05") + "_deal_column"
         ins_sql_file = InsProDir + jobinfo + ".sql"
         where_part_str =" where data_dt='" + data_dt + "') as tt\n"
         ins_part_str1 = " partition(data_dt='" + data_dt + "')\n"
         ins_part_str2 = " partition(data_dt='" + data_dt + "',isu_type='3')\n"
-        partition_columns_str = list_to_str3(columns)
+        if len(pk_columns) != 0:
+            partition_columns_str = list_to_str3(pk_columns)
+        else:
+            partition_columns_str = list_to_str3(columns)
         if(ifpro == "0"):
             rowid_dbtb_name = dbtbmaps.get("05") + "_rowid_"+jobid
-            if(pk_columns_cnt == 0):
-                cls_dbtb_name = dbtbmaps.get("05")+"_cls_"+jobid
-            else:
-                cls_dbtb_name = dbtbmaps.get("05")+"_cls_tmp_"+jobid
+            # cls_dbtb_name = dbtbmaps.get("03")+"_"+jobid
+            cls_dbtb_name = dbtbmaps.get("05")+"_cls_"+jobid
             isu_dbtb_name = dbtbmaps.get("04")+"_"+jobid
             tmp_dbtb_name = dbtbmaps.get("05") + "_deal_column_"+jobid
             ins_sql_file = InsDevDir + jobinfo + ".sql"
@@ -192,30 +189,25 @@ def get_all_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
         write_sql_to_file(ins_sql_file, ins_sql)
         logger.info(ins_sql)
     except Exception as err:
-        logger.error("组装字段清洗后全字段重复去重插入SQL语句失败%s" %err)
+        logger.error("组装组装主键去重插入SQL语句失败%s" %err)
         raise err
         exit(1)
     return ins_sql
 
 
-#组装ROWID去重SQL-清洗规则为空的情况
+# 组装rowid去重SQL-清洗规则为空的情况
 def get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt):
     try:
         datadt = chg_date_format(data_dt)
         jobinfo = str(jobid)+ "_" + str(tbid) + "_"+ str(ifpro)+"_"+str(datadt)+"_deal_dump1"
         logger.info(jobinfo)
         columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
-        pk_columns_nct = len(pk_columns)
         hive_sql_str_columns = list_to_str2(columns)
         dbtbmaps = get_dbtbmaps_by_tbid(logger,conn, tbid)
         rowid_dbtb_name = dbtbmaps.get("05") + "_rowid"
         isu_dbtb_name = dbtbmaps.get("04")
         # tmp_dbtb_name_deal_dump = dbtbmaps.get("05") + "_deal_dump"
-        if(pk_columns_nct == 0):
-            tmp_dbtb_name_deal_dump = dbtbmaps.get("03")
-        else:
-            tmp_dbtb_name_deal_dump = dbtbmaps.get("05")+"_cls_tmp"
-
+        tmp_dbtb_name_deal_dump = dbtbmaps.get("03")
         ins_sql_file = InsProDir + jobinfo + ".sql"
         where_par_str = " where data_dt='" + data_dt + "') as tt\n"
         ins_par_str1 = " partition(data_dt='" + data_dt + "')\n"
@@ -223,10 +215,7 @@ def get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt):
         if(ifpro == '0'):
             rowid_dbtb_name = rowid_dbtb_name +"_"+jobid
             isu_dbtb_name = isu_dbtb_name +"_"+jobid
-            if(pk_columns_nct == 0):
-                tmp_dbtb_name_deal_dump = dbtbmaps.get("05")+"_cls_"+jobid
-            else:
-                tmp_dbtb_name_deal_dump = dbtbmaps.get("05")+"_cls_tmp_"+jobid
+            tmp_dbtb_name_deal_dump = dbtbmaps.get("05")+"_cls_"+jobid
             ins_sql_file = InsDevDir + jobinfo + ".sql"
             where_par_str=") as tt\n"
             ins_par_str1 = "\n"
@@ -244,63 +233,10 @@ def get_dupl_rec_rule_null_sql(logger,conn,jobid,tbid,ifpro,data_dt):
         write_sql_to_file(ins_sql_file, ins_sql)
         logger.info(ins_sql)
     except Exception as err:
-        logger.error("组装无清洗规则情况下按rowid所有字段去重插入SQL语句失败%s" %err)
+        logger.error("组装按rowid所有字段去重插入SQL语句失败%s" %err)
         raise err
         exit(1)
     return ins_sql
-
-
-
-#组装主键重复清洗SQL(重复数据入问题库,isu_type=4)
-def get_pks_dupl_rec_sql(logger,conn,jobid,tbid,ifpro,data_dt):
-    try:
-        datadt = chg_date_format(data_dt)
-        jobinfo = str(jobid)+ "_" + str(tbid) + "_"+ str(ifpro)+"_"+str(datadt)+"_deal_pks_dump"
-        logger.info(jobinfo)
-        columns, pk_columns = get_columns_by_tbid(logger,conn, tbid)
-        pk_columns_nct = len(pk_columns)
-        hive_sql_str_columns = list_to_str2(columns)
-        dbtbmaps = get_dbtbmaps_by_tbid(logger,conn, tbid)
-        tmp_dbtb_name = dbtbmaps.get("05") + "_cls_tmp"
-        isu_dbtb_name = dbtbmaps.get("04")
-        cls_dbtb_name = dbtbmaps.get("03")
-        ins_sql_file = InsProDir + jobinfo + ".sql"
-        where_par_str = " where data_dt='" + data_dt + "'"
-        ins_par_str1 = " partition(data_dt='" + data_dt + "')\n"
-        ins_par_str2 = " partition(data_dt='" + data_dt + "',isu_type='4')\n"
-        if(ifpro == '0'):
-            tmp_dbtb_name = dbtbmaps.get("05") + "_cls_tmp_"+jobid
-            isu_dbtb_name = isu_dbtb_name+"_"+jobid
-            cls_dbtb_name = dbtbmaps.get("05") + "_cls_"+jobid
-            ins_sql_file = InsDevDir + jobinfo + ".sql"
-            where_par_str=" "
-            ins_par_str1 = "\n"
-            ins_par_str2 = " partition(isu_type='4')\n"
-        insql1 = "insert overwrite table "+ isu_dbtb_name + ins_par_str2 +\
-                 " select rowidlwq,"+join_columns_with_t1(columns)+"tagslwq \n" +\
-                 " from "+ tmp_dbtb_name +" as t1 \n" +\
-                 " inner join\n"+\
-                 " (select "+list_to_str3(pk_columns)+",count(1) as cnt from " + tmp_dbtb_name  + where_par_str +"\n"+\
-                 "\t\t\t\tgroup by "+list_to_str3(pk_columns) +" having count(1)>1 ) as t2 \n"+\
-                 "\t\ton "+join_on_columns(pk_columns)+"\n"+\
-                 where_par_str +";\n\n\n\n\n\n"
-        insql2 = "insert overwrite table "+ cls_dbtb_name + ins_par_str1 +\
-                 " select rowidlwq,"+join_columns_with_t1(columns)+"tagslwq \n" +\
-                 " from "+ tmp_dbtb_name +" as t1 \n" +\
-                 " inner join\n"+\
-                 " (select "+list_to_str3(pk_columns)+",count(1) as cnt from " + tmp_dbtb_name  + where_par_str +"\n"+\
-                 "\t\t\t\tgroup by "+list_to_str3(pk_columns) +" having count(1)=1 ) as t2 \n"+\
-                 "\t\ton "+join_on_columns(pk_columns)+"\n"+\
-                 where_par_str +";\n\n\n\n\n\n"
-        sql = insql1 + insql2
-        sql = sql.replace("\t", "    ")
-        write_sql_to_file(ins_sql_file, sql)
-        logger.info("sql=====\n"+sql)
-    except Exception as err:
-        logger.error()
-        raise err
-    return sql
-
 
 # 组装字段处理SQL(按轮次方式)
 # def get_columns_deal_sql(conn, tbid, data_dt):

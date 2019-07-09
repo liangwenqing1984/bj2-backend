@@ -31,6 +31,20 @@ def list_to_str3(list):
             strs += list[i]
     return strs
 
+def join_on_columns(list):
+    strs = ""
+    for i in range(len(list)):
+        if i + 1 < len(list):
+            strs += "t1."+list[i]+"=t2."+list[i]+" and "
+        else:
+            strs += "t1."+list[i]+"=t2."+list[i]
+    return strs
+
+def join_columns_with_t1(list):
+    strs = ""
+    for i in range(len(list)):
+        strs += "t1."+list[i] + ","
+    return strs
 def list_to_concat(list):
     strs = ""
     for  i in range(len(list)):
@@ -56,6 +70,10 @@ def get_cur_time():
 
 def chg_date_format(datestr):
     return datestr.replace("-",'')
+
+
+def get_cur_date():
+    return datetime.datetime.now().strftime('%Y-%m-%d')
 
 
 def gen_result_str(columns):
