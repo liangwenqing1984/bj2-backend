@@ -9,5 +9,5 @@ ln -s set-env.prd.sh set-env.sh
 su - cleanse -c 'metadata-sync-wrap.sh 0 1'
 ### 用户手工执行
 以cleanse用户身份执行，
-metadata-sync-wrap.sh <job-id> 1
+metadata-sync-wrap.sh \<job-id\> 1
 
