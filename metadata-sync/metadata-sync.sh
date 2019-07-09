@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 CUR_DATE=`date +%Y-%m-%d`
 CUR_TIME=`date +%Y-%m-%dT%H:%M:%S`
 
@@ -29,7 +28,7 @@ source $CUR_DIR/set-env.sh
 export CLEANSE_METADB_NAME=${CLEANSE_METADB_NAME}_$TENANT_ID
 export TMP_DB_NAME=tmpdb_$TENANT_ID
 
-METASTORE_TABLE_FILTER="tbl_name not like 'h_bj18_frk%' and tbl_name not like 'h_bj53_web%' and tbl_name not like 'h_bj18_db%' and tbl_name not like 'h_bj30_stat%'"
+METASTORE_TABLE_FILTER="tbl_name not like 'h_bj18_frk%' and tbl_name not like 'h_bj53_web%' and tbl_name not like 'h_bj18_db%' and tbl_name not like 'h_bj30_stat%' and tbl_name not like 'h_statstic%'"
 DB_USAGE_LIST="('02')"
 
 echo "Begin executing job $JOB_ID for synchronizing metadata for tenant $TENANT_ID ..."
@@ -89,7 +88,7 @@ update prd_data_proc_job set job_expire_date = CURRENT_DATE where data_tblid in 
 END
 
 echo "Update Automation job status ..."
-$CUR_DIR/update-etl-jobs.sh
+$CUR_DIR/update-etl-jobs.sh $TENANT_ID
 
 echo "Updating Metadata-Sync job status ..."
 CUR_TIME=`date "+%Y-%m-%d %H:%M:%S"`
