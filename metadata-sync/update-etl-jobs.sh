@@ -6,15 +6,16 @@ source $CUR_DIR/set-env.sh
 
 JOB_CONTROLLER=/usr/share/etl/wash/data_wash/bin/publish.sh
 
-mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D $CLEANSE_DB_NAME -N -e ' 
+mysql -h $CLEANSE_DB_HOST -P $CLEANSE_DB_PORT -u$CLEANSE_DB_USER -p$CLEANSE_DB_PASS  -D $CLEANSE_DB_NAME -N -e " 
 select j.jobid, j.data_tblid, j.job_type 
 from prd_data_proc_job j, data_tbl t, db d, data_part p 
 where t.dbid = d.dbid
 and d.partid = p.partid
 and t.data_tblid = j.data_tblid 
+and p.tnmtid = $TENANT_ID
 and t.del_dt = CURRENT_DATE
 and j.job_type in (1,3) 
-and j.job_expire_date is null' | while read JOB_ID TBL_ID JOB_TYPE
+and j.job_expire_date is null" | while read JOB_ID TBL_ID JOB_TYPE
 do
 	case $JOB_TYPE in
 		1)
