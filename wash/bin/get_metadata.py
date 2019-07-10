@@ -661,7 +661,7 @@ def get_orig_hive_tb_records(logger,hive_conn,conn,jobid,tbid,ifpro,data_dt):
         hive_cursor.execute(hql)
         records = int(hive_cursor.fetchone()[0])
         if(records == 0):
-            logger.warn("表id %s 分区 %s 记录数为0，程序退出!"%{tbid,data_dt})
+            logger.warn("表id %s 分区 %s 记录数为0，程序退出!"%(tbid,data_dt))
     except Exception as err:
         logger.error("获取表 %s 分区 %s 记录总数失败"%(tbid,data_dt))
         raise err
@@ -698,13 +698,13 @@ def get_labelid_by_tnmtid_and_labelcd(logger,conn,tnmtid,labelcd='__L000001__'):
         cursor.execute(sql)
         result = cursor.fetchone()
         if(result == None or len(result)==0):
-            logger.error("根据租户id:%s 和已清洗标签code: %s 未找到labelid"%{tnmtid,labelcd})
+            logger.error("根据租户id:%s 和已清洗标签code: %s 未找到labelid"%(tnmtid,labelcd))
             raise err
         else:
             labelid = result.get("labelid")
         return labelid
     except Exception as err:
-        logger.error("根据租户id:%s 和已清洗标签code: %s 查找labelid失败"%{tnmtid,labelcd})
+        logger.error("根据租户id:%s 和已清洗标签code: %s 查找labelid失败"%(tnmtid,labelcd))
         raise err
     finally:
         cursor.close()
