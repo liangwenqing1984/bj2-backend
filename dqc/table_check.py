@@ -14,7 +14,7 @@ def table_default_rule(target_database, target_table, pk):
     """
     duplicate_record = table_duplicate_record(target_database, target_table)
     if len(pk) == 0:
-        duplicate_pk = duplicate_record
+        duplicate_pk = 0
     else:
         duplicate_pk = table_duplicate_pk(target_database, target_table, pk)
     return duplicate_record, duplicate_pk

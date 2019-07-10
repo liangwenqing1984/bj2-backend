@@ -14,7 +14,7 @@ def create_table_sql(target_database, target_table, field, datatype, fld_check):
         i += 1
     for k, v in fld_check.items():
         for check in v:
-            fld_as = k + "_" + check
+            fld_as = k + "_leiyry_" + check
             content += "," + fld_as + " int"
     content += "," + const.ROWID_FIELD + " string"
     content += "," + const.RAND_FIELD + " string"
@@ -71,7 +71,7 @@ def stats_field_check(target_database, target_table, fld_check):
     fld_as = []
     for k, v in fld_check.items():
         for check in v:
-            fld_as.append(k + "_" + check)
+            fld_as.append(k + "_leiyry_" + check)
     sum_fld = [const.SUM_SQL % (fld, fld) for fld in fld_as]
     args = {"stats": ",".join(sum_fld),
             "target_database": target_database,

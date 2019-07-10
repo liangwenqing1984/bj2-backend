@@ -23,3 +23,5 @@ hiveserver2 = '127.0.0.1'
 hive_user = 'leiyry'
 
 hive_port = 10000
+
+tornado_port = 5555

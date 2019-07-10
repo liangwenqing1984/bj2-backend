@@ -1,8 +1,14 @@
+SUCCESS = 'success'
+
+UNKNOWN_EXCEPTION = 'unknown exception'
+
 CHECK_NULL = 'null'
 
 ROWID_FIELD = 'leiyry'
 
 RAND_FIELD = 'leiyry_rand'
+
+TMP_DATABASE_USAGE = '05'
 
 NULL_NVL = '\\N'
 
@@ -35,7 +41,7 @@ FIELD_CHECK = '''select t1.fld_phys_nm,t3.data_expl_tmplid,t5.chk_proj_cd
 
 CHECK_ITEM = '''select Chk_Projid,Chk_Proj_Cd from data_chk_proj'''
 
-FIELD_TABLE = '''select Fldid,Fld_Phys_Nm from data_fld where Data_Tblid=%s and Del_Dt is null'''
+FIELD_TABLE = '''select Fldid,Fld_Phys_Nm from data_fld where Data_Tblid=%s and Del_Dt is null order by fld_ord asc'''
 
 TARGET_DATABASE = '''select tt2.db_phys_nm from data_part tt1 
  join db tt2 on tt1.partid=tt2.partid
@@ -46,7 +52,7 @@ TARGET_DATABASE = '''select tt2.db_phys_nm from data_part tt1
  on tt1.tnmtid=tt3.tnmtid
  join db_usage tt4
  on tt2.Db_Usageid=tt4.Db_Usageid
- where tt4.db_usage_cd='05'
+ where tt4.db_usage_cd=%s
 '''
 
 DROP_SQL = '''drop table IF EXISTS %s.%s'''
@@ -63,7 +69,6 @@ STORED AS TEXTFILE
 BASE_SQL = '''insert overwrite table ${target_database}.${target_table} 
  select ${field},${udf} ${md5},rand() as leiyry_rand from ${database}.${table}
  where ${partition}
- order by leiyry_rand
  ${limit}
 '''
 
@@ -78,15 +83,16 @@ STATS_SQL = '''select ${stats} from ${target_database}.${target_table}
 
 SUM_SQL = '''sum(%s) as %s'''
 
-COUNT_SQL = '''select count(*) as total from ${database}.${table} where ${partition}'''
+COUNT_SQL = '''select count(*) as total 
+ from ${database}.${table} where ${partition}'''
 
 DUPLICATE_RECORD_SQL = '''select count(*) as duplicate from (select *,
- row_number() over (partition by leiyry) num 
- from ${target_database}.${target_table} ) t where t.num>1
+ row_number() over (partition by leiyry) leiyry_num 
+ from ${target_database}.${target_table} ) t where t.leiyry_num>1
 '''
 
-DUPLICATE_KEYS_SQL = '''select count(*) as duplicate from 
- (select ${pk},count(*) 
+DUPLICATE_KEYS_SQL = '''select sum(leiyry_xx) as duplicate from 
+ (select ${pk},count(*) as leiyry_xx 
  from ${target_database}.${target_table} 
  group by ${pk} 
  having count(*)>1) t
@@ -102,6 +108,10 @@ TABLE_CHECK_RESULT = '''update data_proc_job set Job_Stus='DONE',Rfrsh_Tm=now(),
  where Jobid=%s'''
 
 
-LIMIT_SQL = '''limit %s'''
+LIMIT_SQL = ''' order by leiyry_rand limit %s'''
 
 FLD_EXPL_RESULT = 'fld_expl_result'
+
+TABLE_COMMENT = '''select Data_Tbl_Cn_Nm from data_tbl where Data_Tblid=%s'''
+
+FIELD_COMMENT = '''select Fld_Cn_Nm from data_fld where Del_Dt is null and Data_Tblid=%s order by Fld_Ord asc'''

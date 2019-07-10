@@ -5,6 +5,7 @@ import metadata
 import field_check
 import job
 import table_check
+import const
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s: %(message)s',
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 def process(job_id, table_id, mode, sample, date):
     # 获取元数据
-    database, table = metadata.get_metadata(table_id)
+    database, table = metadata.get_database_table(table_id)
     partition, partition_date = metadata.get_partition_date(table_id, mode, date)
     if partition is None:
         job.total_record(job_id, 0, partition_date)
@@ -23,7 +24,7 @@ def process(job_id, table_id, mode, sample, date):
     fld_check = metadata.merge_check(check, null)
     check_item = metadata.get_check_item()
     field_item = metadata.get_field(table_id)
-    target_database = metadata.get_target_database(database)
+    target_database = metadata.get_target_database(database, const.TMP_DATABASE_USAGE)
     target_table = table + '_' + str(job_id)
     # 统计总记录数
     total = table_check.total_record(database, table, partition)
@@ -33,7 +34,8 @@ def process(job_id, table_id, mode, sample, date):
     limit_size = int(total * sample / 100)
     # 字段级检查
     field_check.create_target_table(target_database, target_table, field, data_type, fld_check)
-    field_check.handle_base_table(database, table, partition, target_database, target_table, field, fld_check, sample, limit_size)
+    field_check.handle_base_table(database, table, partition, target_database, target_table, field, fld_check, sample,
+                                  limit_size)
     if len(fld_check) > 0:
         stats_filed_check, fld_as = field_check.stats_field_check(target_database, target_table, fld_check)
         job.fld_expl_result(job_id, stats_filed_check, check_item, field_item, fld_as)
@@ -80,10 +82,10 @@ if __name__ == '__main__':
     """
     """
     mock: 
-        作业ID  123
-        表ID  1
+        作业ID  86
+        表ID  1184
         模式  0 
-        抽样百分比  50  代表50%抽样  全表100
+        抽样百分比  100  代表50%抽样  全表100
         指定日期(可选)  20190101
     """
     main_job_id = None

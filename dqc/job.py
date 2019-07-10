@@ -1,6 +1,8 @@
 from mysql import MySQL
 import config
 import const
+import mask_const
+import datetime
 
 
 # 作业失败
@@ -35,7 +37,7 @@ def fld_expl_result(job_id, stats_filed_check, check_item, field_item, fld_as):
     i = 0
     for val in stats_filed_check:
         key = fld_as[i]
-        field = key[:key.rindex('_')]
+        field = key[:key.rindex('_leiyry_')]
         check = key[key.rindex('_') + 1:]
         fld_id = field_item[field]
         chk_id = check_item[check]
@@ -47,4 +49,53 @@ def fld_expl_result(job_id, stats_filed_check, check_item, field_item, fld_as):
         db.insert(const.FLD_EXPL_RESULT, param)
         param.clear()
         i += 1
+    del db
+
+
+# 脱敏作业执行状态
+def mask_job_status(job_id, status, start_time):
+    """
+    作业执行状态:
+        0 正在执行
+        1 执行完成
+        2 执行失败
+    """
+    db = MySQL(config.dqc_mysql)
+    db.execute(mask_const.MASK_JOB_STATUS, (status, start_time, job_id))
+    del db
+
+
+# 脱敏作业开始
+def start_mask_job(job_id):
+    """
+    作业执行状态:
+        0 正在执行
+        1 执行完成
+        2 执行失败
+    """
+    db = MySQL(config.dqc_mysql)
+    db.execute(mask_const.MASK_JOB_START, (job_id,))
+    del db
+
+
+# 字段脱敏结果
+def fld_mask_result(job_id, rule, field_items, mask_cmpu):
+    db = MySQL(config.dqc_mysql)
+    for k, v in rule.items():
+        param = {"Jobid": job_id,
+                 "Job_Exec_Date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                 "Fldid": field_items[k],
+                 "Data_Wash_Cmpuid": mask_cmpu[v],
+                 "Job_Exec_Time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        db.insert(mask_const.MASK_FLD_RESULT, param)
+    del db
+
+
+# 打标签
+def mask_label(table_id, mask_lable_id):
+    db = MySQL(config.dqc_mysql)
+    parm = {"Data_Tblid": table_id,
+            "Labelid": mask_lable_id,
+            "Mark_Idx_Type": 0}
+    db.insert(mask_const.DATA_TBL_MARK_IDX, parm)
     del db

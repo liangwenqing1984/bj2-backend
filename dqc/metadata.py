@@ -3,15 +3,16 @@ from mysql import MySQL
 import exception
 import const
 import collections
+import mask_const
 
 
 # 根据表ID获取库名、表名
 def get_database_table(table_id):
     db = MySQL(config.dqc_mysql)
     result = db.execute(const.DB_TABLE, (table_id,))
+    del db
     if len(result) == 0:
         raise exception.DQCException("database table is non-exist. [table_id:%s]" % table_id)
-    del db
     return result[0]["db_phys_nm"], result[0]["data_tbl_phys_nm"]
 
 
@@ -82,12 +83,6 @@ def get_field_check(table_id):
     return check
 
 
-# 获取数据库信息
-def get_metadata(table_id):
-    database, table = get_database_table(table_id)
-    return database, table
-
-
 # 获取分区日期
 def get_partition_date(table_id, mode, date):
     if mode == 1:
@@ -100,12 +95,12 @@ def get_partition_date(table_id, mode, date):
 
 
 # 获取目标数据库
-def get_target_database(database):
+def get_target_database(database, usage):
     db = MySQL(config.dqc_mysql)
-    result = db.execute(const.TARGET_DATABASE, (database,))
+    result = db.execute(const.TARGET_DATABASE, (database, usage))
+    del db
     if len(result) == 0:
         raise exception.DQCException("target database is non-exist. [database:%s]" % database)
-    del db
     return result[0]["db_phys_nm"]
 
 
@@ -129,10 +124,10 @@ def merge_check(check, null):
 def get_check_item():
     db = MySQL(config.dqc_mysql)
     result = db.execute(const.CHECK_ITEM)
+    del db
     item = {}
     for rs in result:
         item[rs['Chk_Proj_Cd']] = rs['Chk_Projid']
-    del db
     return item
 
 
@@ -140,8 +135,57 @@ def get_check_item():
 def get_field(table_id):
     db = MySQL(config.dqc_mysql)
     result = db.execute(const.FIELD_TABLE, (table_id,))
+    del db
     item = {}
     for rs in result:
         item[rs['Fld_Phys_Nm']] = rs['Fldid']
-    del db
     return item
+
+
+# 脱敏处理规则（立即模式）
+def immediate_mask_rule(table_id):
+    db = MySQL(config.dqc_mysql)
+    result = db.execute(mask_const.IMM_MASK, (table_id,))
+    del db
+    mask_rule = {rs["Fld_Phys_Nm"]: rs["Data_Wash_Cmpu_Cd"] for rs in result}
+    return mask_rule
+
+
+# 脱敏处理规则（周期模式）
+def frequent_mask_rule(table_id):
+    db = MySQL(config.dqc_mysql)
+    result = db.execute(mask_const.FREQ_MASK, (table_id,))
+    del db
+    mask_rule = {rs["Fld_Phys_Nm"]: rs["Data_Wash_Cmpu_Cd"] for rs in result}
+    return mask_rule
+
+
+# 脱敏算法
+def get_mask_cmpu():
+    db = MySQL(config.dqc_mysql)
+    result = db.execute(mask_const.MASK_CMPU)
+    del db
+    mask_cmpu = {rs["Data_Wash_Cmpu_Cd"]: rs["Data_Wash_Cmpuid"] for rs in result}
+    return mask_cmpu
+
+
+# 获取注释
+def get_comment(table_id):
+    db = MySQL(config.dqc_mysql)
+    result = db.execute(const.TABLE_COMMENT, (table_id,))
+    table_comment = str(result[0].get("Data_Tbl_Cn_Nm") or '').strip('\n').strip('\r').replace(';', '')
+    result = db.execute(const.FIELD_COMMENT, (table_id,))
+    field_comment = [str(rs.get("Fld_Cn_Nm") or '').strip('\n').strip('\r').replace(';', '') for rs in result]
+    del db
+    return table_comment, field_comment
+
+
+# 检查表结构是否调整
+def get_change_ddl(table_id):
+    flag = False
+    db = MySQL(config.dqc_mysql)
+    result = db.execute(mask_const.TABLE_CHANGE, (table_id,))
+    if len(result) != 0:
+        flag = True
+    del db
+    return flag
